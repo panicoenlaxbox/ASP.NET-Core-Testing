@@ -53,6 +53,8 @@ namespace WebApplication1
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
+
             app.UseCors();
             app.UseStaticFiles();
 

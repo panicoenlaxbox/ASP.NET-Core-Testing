@@ -12,7 +12,8 @@ namespace ClassLibrary1
         public static IServiceCollection ConfigureServices(IServiceCollection services)
         {
             services
-                .AddMvc()
+                .AddMvcCore()
+                .AddJsonFormatters()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddAuthorization(options =>

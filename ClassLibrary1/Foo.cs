@@ -4,5 +4,6 @@
     {
         public int Id { get; set; }
         public string Bar { get; set; }
+        public string Baz { get; set; }
     }
 }

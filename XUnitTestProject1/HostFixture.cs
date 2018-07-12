@@ -18,6 +18,9 @@ namespace XUnitTestProject1
             var hostBuilder = new WebHostBuilder()
                 .UseStartup<XUnitTestProject1StartUp>();
 
+            //var hostBuilder = WebHost.CreateDefaultBuilder()
+            //    .UseStartup<XUnitTestProject1StartUp>();
+
             Server = new TestServer(hostBuilder);
 
             Server.Host.MigrateDbContext<FooContext>(context =>
@@ -55,7 +58,7 @@ namespace XUnitTestProject1
 
         public Task ExecuteDbContextAsync(Func<FooContext, Task> action)
         {
-            return ExecuteScopeAsync(serviceProvider => 
+            return ExecuteScopeAsync(serviceProvider =>
                 action(serviceProvider.GetService<FooContext>()));
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using ClassLibrary1.Controllers;
 using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace XUnitTestProject1
 {
@@ -15,10 +17,12 @@ namespace XUnitTestProject1
     public class ValuesControllerShould
     {
         private readonly HostFixture _fixture;
+        private readonly ITestOutputHelper _logger;
 
-        public ValuesControllerShould(HostFixture fixture)
+        public ValuesControllerShould(HostFixture fixture, ITestOutputHelper logger)
         {
             _fixture = fixture;
+            _logger = logger;
         }
 
         [Fact]
@@ -59,8 +63,11 @@ namespace XUnitTestProject1
                 {
                     new Claim("myclaim", "myclaim is very important"),
                 }).GetAsync();
-
+            
             response.EnsureSuccessStatusCode();
+
+            //var foo2 = await response.GetTo<Foo>();
+            //_logger.WriteLine(foo2.Id.ToString());
         }
 
         [Fact]
@@ -74,6 +81,7 @@ namespace XUnitTestProject1
                     new Claim("myclaim", "myclaim is very important"),
                 });
             var response = await requestBuilder.GetAsync();
+
             response.EnsureSuccessStatusCode();
         }
     }
