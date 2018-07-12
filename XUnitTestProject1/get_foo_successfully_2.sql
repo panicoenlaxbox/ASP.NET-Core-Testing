@@ -1,0 +1,1 @@
+﻿INSERT INTO Foo (Bar, Baz) VALUES ('Bar', 'Baz');

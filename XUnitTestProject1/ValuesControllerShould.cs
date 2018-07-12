@@ -8,6 +8,7 @@ using ClassLibrary1;
 using ClassLibrary1.Controllers;
 using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -63,11 +64,33 @@ namespace XUnitTestProject1
                 {
                     new Claim("myclaim", "myclaim is very important"),
                 }).GetAsync();
-            
+
             response.EnsureSuccessStatusCode();
 
             //var foo2 = await response.GetTo<Foo>();
             //_logger.WriteLine(foo2.Id.ToString());
+        }
+
+        [Fact]
+        [ResetDatabase(@"Server=(LocalDB)\MSSQLLocalDB;Database=Foo;Trusted_Connection=True;")]
+        public async Task get_foo_successfully_2()
+        {
+            Foo foo = null;
+
+            await _fixture.ExecuteDbContextAsync(async context =>
+            {
+                foo = await context.Foo.FirstAsync();
+            });
+
+            var id = foo.Id;
+            var response = await _fixture.Server
+                .CreateHttpApiRequest<ValuesController>(controller => controller.Get(id))
+                .WithIdentity(new[]
+                {
+                    new Claim("myclaim", "myclaim is very important"),
+                }).GetAsync();
+
+            response.EnsureSuccessStatusCode();
         }
 
         [Fact]
