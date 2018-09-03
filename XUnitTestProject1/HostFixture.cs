@@ -16,10 +16,10 @@ namespace XUnitTestProject1
         public HostFixture()
         {
             var hostBuilder = new WebHostBuilder()
-                .UseStartup<XUnitTestProject1StartUp>();
+                .UseStartup<Startup>();
 
             //var hostBuilder = WebHost.CreateDefaultBuilder()
-            //    .UseStartup<XUnitTestProject1StartUp>();
+            //    .UseStartup<Startup>();
 
             Server = new TestServer(hostBuilder);
 

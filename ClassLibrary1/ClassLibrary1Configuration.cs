@@ -13,16 +13,17 @@ namespace ClassLibrary1
         {
             services
                 .AddMvcCore()
+                .AddAuthorization(options =>
+                {
+                    options.AddPolicy("mypolicy", policy =>
+                    {
+                        policy.RequireClaim("myclaim");
+                    });
+                })
                 .AddJsonFormatters()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("mypolicy", policy =>
-                {
-                    policy.RequireClaim("myclaim");
-                });
-            });
+            //services.AddAuthorization();
 
             return services;
         }

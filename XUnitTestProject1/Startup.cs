@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace XUnitTestProject1
 {
-    class XUnitTestProject1StartUp
+    class Startup
     {
         public void ConfigureServices(IServiceCollection services)
         {
@@ -25,7 +25,7 @@ namespace XUnitTestProject1
                     options.UseSqlServer(@"Server=(LocalDB)\MSSQLLocalDB;Database=Foo;Trusted_Connection=True;",
                         setup =>
                         {
-                            //setup.MigrationsAssembly(typeof(XUnitTestProject1StartUp).Assembly.FullName);
+                            //setup.MigrationsAssembly(typeof(Startup).Assembly.FullName);
                         });
                 });
         }

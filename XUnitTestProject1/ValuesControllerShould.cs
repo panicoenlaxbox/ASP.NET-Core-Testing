@@ -38,6 +38,7 @@ namespace XUnitTestProject1
                 {
                     new Claim("myclaim", "myclaim is very important"),
                 }).GetAsync();
+
             response.EnsureSuccessStatusCode();
         }
 

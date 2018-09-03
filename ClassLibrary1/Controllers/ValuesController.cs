@@ -11,6 +11,7 @@ namespace ClassLibrary1.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize("mypolicy")]
+    //[Authorize()]
     public class ValuesController : ControllerBase
     {
         private readonly FooContext _context;
