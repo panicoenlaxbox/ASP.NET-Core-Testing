@@ -7,11 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="get_foo_successfully_2.sql" />
+    <None Remove="appsettings.json" />
+    <None Remove="CustomersControllerShould.get_one_with_sql_seeder_works.sql" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="get_foo_successfully_2.sql" />
+    <Content Include="appsettings.json">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Sql\CustomersControllerShould.get_one_with_sql_seeder_works.sql" />
   </ItemGroup>
 
   <ItemGroup>

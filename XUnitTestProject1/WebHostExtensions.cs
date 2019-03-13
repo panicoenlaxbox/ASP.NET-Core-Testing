@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+// ReSharper disable once CheckNamespace
 namespace Microsoft.AspNetCore.Hosting
 {
     public static class WebHostExtensions

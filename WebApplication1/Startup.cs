@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ClassLibrary1;
+﻿using ClassLibrary1;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace WebApplication1
 {
@@ -29,36 +21,35 @@ namespace WebApplication1
         {
             ClassLibrary1Configuration.ConfigureServices(services)
                 .AddCors()
-                .AddDbContext<FooContext>(options =>
+                .AddDbContext<ShopContext>(options =>
                     {
-                        options.UseSqlServer(@"Server=(LocalDB)\MSSQLLocalDB;Database=Foo;Trusted_Connection=True;",
-                            setup =>
-                            {
-                                //setup.MigrationsAssembly(typeof(Startup).Assembly.FullName);
-                            });
+                        options.UseSqlServer(@"Server=(LocalDB)\MSSQLLocalDB;Database=MyShop;Trusted_Connection=True;");
                     });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            if (env.IsDevelopment())
+            ClassLibrary1Configuration.Configure(app, host =>
             {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseHsts();
-            }
+                if (env.IsDevelopment())
+                {
+                    host.UseDeveloperExceptionPage();
+                }
+                else
+                {
+                    host.UseHsts();
+                }
 
-            app.UseHttpsRedirection();
+                host.UseHttpsRedirection();
 
-            app.UseAuthentication();
+                host.UseAuthentication();
 
-            app.UseCors();
-            app.UseStaticFiles();
+                host.UseCors();
+                host.UseStaticFiles();
 
-            app.UseMvc();
+                return host;
+            });
         }
     }
 }

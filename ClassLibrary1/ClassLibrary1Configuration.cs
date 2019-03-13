@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,14 +21,13 @@ namespace ClassLibrary1
                 .AddJsonFormatters()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            //services.AddAuthorization();
-
             return services;
         }
 
-        //public static void Configure(IApplicationBuilder app)
-        //{
-        //    //app.UseMvc();
-        //}
+        public static void Configure(IApplicationBuilder app, Func<IApplicationBuilder, IApplicationBuilder> configureHost)
+        {
+            configureHost(app)
+                .UseMvc();
+        }
     }
 }

@@ -3,14 +3,14 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace ClassLibrary1
 {
-    class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<FooContext>
+    class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ShopContext>
     {
-        public FooContext CreateDbContext(string[] args)
+        public ShopContext CreateDbContext(string[] args)
         {
-            var options = new DbContextOptionsBuilder<FooContext>()
-                .UseSqlServer(@"Server=(LocalDB)\MSSQLLocalDB;Database=Foo;Trusted_Connection=True;")
+            var options = new DbContextOptionsBuilder<ShopContext>()
+                .UseSqlServer(@"Server=(LocalDB)\MSSQLLocalDB;Database=MyShop;Trusted_Connection=True;")
                 .Options;
-            return new FooContext(options);
+            return new ShopContext(options);
         }
     }
 }

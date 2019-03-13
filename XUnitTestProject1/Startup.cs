@@ -1,18 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Acheve.AspNetCore.TestHost.Security;
+﻿using Acheve.AspNetCore.TestHost.Security;
 using Acheve.TestHost;
 using ClassLibrary1;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace XUnitTestProject1
 {
     class Startup
     {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
         public void ConfigureServices(IServiceCollection services)
         {
             ClassLibrary1.ClassLibrary1Configuration.ConfigureServices(services);
@@ -20,21 +24,22 @@ namespace XUnitTestProject1
                 .AddAuthentication(TestServerAuthenticationDefaults.AuthenticationScheme)
                 .AddTestServerAuthentication();
             services
-                .AddDbContext<FooContext>(options =>
+                .AddDbContext<ShopContext>(options =>
                 {
-                    options.UseSqlServer(@"Server=(LocalDB)\MSSQLLocalDB;Database=Foo;Trusted_Connection=True;",
-                        setup =>
-                        {
-                            //setup.MigrationsAssembly(typeof(Startup).Assembly.FullName);
-                        });
+                    // appsettings.json, Copy to Output Directory: Copy if newer
+                    var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                    options.UseSqlServer(connectionString);
                 });
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            app.UseAuthentication();
+            ClassLibrary1Configuration.Configure(app, host =>
+            {
+                host.UseAuthentication();
 
-            app.UseMvc();
+                return host;
+            });
         }
     }
 }

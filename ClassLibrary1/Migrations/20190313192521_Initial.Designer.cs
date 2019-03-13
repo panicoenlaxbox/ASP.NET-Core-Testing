@@ -8,29 +8,49 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ClassLibrary1.Migrations
 {
-    [DbContext(typeof(FooContext))]
-    [Migration("20180711235327_Initial")]
+    [DbContext(typeof(ShopContext))]
+    [Migration("20190313192521_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.1.1-rtm-30846")
+                .HasAnnotation("ProductVersion", "2.1.8-servicing-32085")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("ClassLibrary1.Foo", b =>
+            modelBuilder.Entity("ClassLibrary1.Country", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Bar");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
                     b.HasKey("Id");
 
-                    b.ToTable("Foo");
+                    b.ToTable("Countries");
+
+                    b.HasData(
+                        new { Id = 1, Name = "Spain" },
+                        new { Id = 2, Name = "France" }
+                    );
+                });
+
+            modelBuilder.Entity("ClassLibrary1.Customer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Name")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Customers");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,6 +1,5 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.TestHost;
 using Newtonsoft.Json;
 
 namespace XUnitTestProject1
