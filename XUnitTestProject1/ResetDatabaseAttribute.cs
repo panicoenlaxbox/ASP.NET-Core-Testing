@@ -4,27 +4,6 @@ using Xunit.Sdk;
 
 namespace XUnitTestProject1
 {
-    public class DbComparer
-    {
-        private readonly string _sourceConnectionString;
-        private readonly string _targetConnectionString;
-
-        public DbComparer(string sourceConnectionString, string targetConnectionString)
-        {
-            _sourceConnectionString = sourceConnectionString;
-            _targetConnectionString = targetConnectionString;
-        }
-
-        public bool Compare()
-        {
-            return false;
-        }
-    }
-
-    public class DbComparerEntryResult
-    {
-
-    }
 
     public class ResetDatabaseAttribute : BeforeAfterTestAttribute
     {
