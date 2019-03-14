@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Xunit.Sdk;
 
 namespace XUnitTestProject1
@@ -12,20 +13,30 @@ namespace XUnitTestProject1
     {
         private readonly bool _executeBefore;
         private readonly bool _executeAfter;
-        private readonly IEnumerable<string> _tablesToExclude;
-        private readonly IEnumerable<string> _fieldsToExclude;
+        private readonly string[] _schemas;
+        private readonly IEnumerable<string> _tables;
+        private readonly IEnumerable<string> _fields;
+        private readonly bool _exclude;
 
-        public ResetDatabaseAttribute() : this(false, false, null, null)
+        public ResetDatabaseAttribute() : this(false, false)
         {
 
         }
 
-        public ResetDatabaseAttribute(bool executeBefore, bool executeAfter, string[] tablesToExclude = null, string[] fieldsToExclude = null)
+        public ResetDatabaseAttribute(
+            bool executeBefore, 
+            bool executeAfter,
+            string[] schemas = null, 
+            string[] tables = null, 
+            string[] fields = null,
+            bool exclude = true)
         {
             _executeBefore = executeBefore;
             _executeAfter = executeAfter;
-            _tablesToExclude = tablesToExclude;
-            _fieldsToExclude = fieldsToExclude;
+            _schemas = schemas;
+            _tables = tables;
+            _fields = fields;
+            _exclude = exclude;
         }
 
         public override void Before(MethodInfo methodUnderTest)
@@ -43,10 +54,17 @@ namespace XUnitTestProject1
         private static void ExecuteResource(MethodInfo methodUnderTest, bool after)
         {
             var assembly = typeof(ResetDatabaseAttribute).Assembly;
-            var resource =
-                $"{assembly.GetName().Name}.Sql.{methodUnderTest.DeclaringType.Name}.{methodUnderTest.Name}_{(after ? "after" : "before")}.sql";
+            var pattern = $@"{methodUnderTest.DeclaringType.Name}\.{methodUnderTest.Name}_{(after ? "after" : "before")}_?\d*\.sql$";
+            var resources = new List<string>();
+            foreach (var resource in assembly.GetManifestResourceNames())
+            {
+                if (Regex.IsMatch(resource, pattern))
+                {
+                    resources.Add(resource);
+                }
+            }
             var connectionString = after ? HostFixture.ConnectionStringAfter : HostFixture.ConnectionString;
-            SqlResourceExecutor.Execute(connectionString, assembly, resource);
+            SqlResourceExecutor.Execute(connectionString, assembly, resources);
         }
 
         public override void After(MethodInfo methodUnderTest)
@@ -54,8 +72,13 @@ namespace XUnitTestProject1
             if (_executeAfter)
             {
                 ExecuteResource(methodUnderTest, after: true);
-                var dbComparer = new DbComparer(HostFixture.ConnectionString, HostFixture.ConnectionStringAfter,
-                    _tablesToExclude, _fieldsToExclude);
+                var dbComparer = new DbComparer(
+                    HostFixture.ConnectionString, 
+                    HostFixture.ConnectionStringAfter,
+                    _schemas, 
+                    _tables, 
+                    _fields, 
+                    _exclude);
                 var result = dbComparer.Compare();
                 if (!result)
                 {
@@ -67,7 +90,7 @@ namespace XUnitTestProject1
                         message += $"{entry}\n";
                     }
 
-                    throw new XunitException(message);
+                    throw new Exception(message);
                 }
             }
 

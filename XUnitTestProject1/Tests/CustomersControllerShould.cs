@@ -81,7 +81,7 @@ namespace XUnitTestProject1.Tests
         }
 
         [Fact]
-        [ResetDatabase(executeBefore: true, executeAfter: true)]
+        [ResetDatabase(executeBefore: true, executeAfter: true, schemas: new[] { "dbo" }, tables: new[] { "Customers" }, exclude: false)]
         public async Task get_one_with_sql_seeder_works()
         {
             Customer customer = null;

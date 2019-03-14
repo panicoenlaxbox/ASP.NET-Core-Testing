@@ -1,12 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace XUnitTestProject1
 {
     public class SqlResourceExecutor
     {
+        public static void Execute(string connectionString, Assembly assembly, IEnumerable<string> resources)
+        {
+            foreach (var resource in resources.OrderBy(r => r))
+            {
+                Execute(connectionString, assembly, resource);
+            }
+        }
+
         public static void Execute(string connectionString, Assembly assembly, string resource)
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));

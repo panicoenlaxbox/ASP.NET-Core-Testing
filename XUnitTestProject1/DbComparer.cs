@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using Dapper;
+// ReSharper disable PossibleMultipleEnumeration
 
 namespace XUnitTestProject1
 {
@@ -10,90 +11,174 @@ namespace XUnitTestProject1
     {
         private readonly string _sourceConnectionString;
         private readonly string _targetConnectionString;
-        private readonly IEnumerable<string> _tablesToExclude;
-        private readonly IEnumerable<string> _fieldsToExclude;
-        private readonly string[] _typesToExclude = { "cursor", "image", "ntext", "text", "XML" };
+        private readonly IEnumerable<string> _schemas;
+        private readonly IEnumerable<string> _tables;
+        private readonly IEnumerable<string> _fields;
+        private readonly bool _exclude;
+        private readonly IList<string> _typesToExclude;
 
-        public DbComparer(string sourceConnectionString, string targetConnectionString, IEnumerable<string> tablesToExclude,
-            IEnumerable<string> fieldsToExclude)
+        public DbComparer(
+            string sourceConnectionString,
+            string targetConnectionString,
+            IEnumerable<string> schemas,
+            IEnumerable<string> tables,
+            IEnumerable<string> fields, 
+            bool exclude)
         {
             _sourceConnectionString = sourceConnectionString ?? throw new ArgumentNullException(nameof(sourceConnectionString));
             _targetConnectionString = targetConnectionString ?? throw new ArgumentNullException(nameof(targetConnectionString));
-            _tablesToExclude = new[] { "__EFMigrationsHistory" }.Union(tablesToExclude ?? Enumerable.Empty<string>());
-            _fieldsToExclude = new[] { "Id" }.Union(fieldsToExclude ?? Enumerable.Empty<string>());
+            _schemas = schemas ?? Enumerable.Empty<string>();
+            if (exclude)
+            {
+                _tables = new[] { "__EFMigrationsHistory", "sysdiagrams" }.Union(tables ?? Enumerable.Empty<string>());
+            }
+            else
+            {
+                _tables = tables ?? Enumerable.Empty<string>();
+            }
+            _fields = fields ?? Enumerable.Empty<string>();
+            // https://docs.microsoft.com/en-us/sql/t-sql/functions/checksum-transact-sql?view=sql-server-2017#arguments
+            _exclude = exclude;
+            _typesToExclude = new List<string>
+            {
+                "cursor",
+                "image",
+                "ntext",
+                "text",
+                "XML",
+                "date",
+                "datetime",
+                "datetime2",
+                "datetimeoffset",
+                "time",
+                "timestamp"
+            };
         }
 
         public DbComparerResult Compare()
         {
             var result = new DbComparerResult();
-
-            foreach (var (schema, table) in GetTables())
+            foreach (var (schema, table) in GetTables(
+                _sourceConnectionString, 
+                _schemas, 
+                _tables, 
+                _exclude))
             {
-                var sql = "SELECT CHECKSUM(";
-                foreach (var column in GetColumns(table))
-                {
-                    sql += $"[{column}],";
-                }
-                sql = sql.TrimEnd(',') +
-                          $@") FROM [{schema}].[{table}]";
-                var entry = new DbComparerEntryResult();
-                using (var connection = new SqlConnection(_sourceConnectionString))
-                {
-                    var checksum = connection.ExecuteScalar<int>(sql);
-                    entry.TableName = table;
-                    entry.SourceChecksum = checksum;
-                }
-                using (var connection = new SqlConnection(_targetConnectionString))
-                {
-                    var checksum = connection.ExecuteScalar<int>(sql);
-                    entry.TargetChecksum = checksum;
-                }
-                result.Entries.Add(entry);
+                result.Entries.Add(
+                    CreateEntry(
+                        _sourceConnectionString, 
+                        _targetConnectionString, 
+                        schema, 
+                        table,
+                        _fields,
+                        _typesToExclude,
+                        _exclude));
             }
-
             return result;
         }
 
-        private IEnumerable<(string, string)> GetTables()
+        private static DbComparerEntryResult CreateEntry(
+            string sourceConnectionString, 
+            string targetConnectionString, 
+            string schema, 
+            string table, 
+            IEnumerable<string> fieldsToExclude,
+            IEnumerable<string> typesToExclude,
+            bool exclude)
         {
-            var sql = @"SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
-                      WHERE TABLE_NAME NOT IN (";
-            foreach (var tableToExclude in _tablesToExclude)
+            var sql = "SELECT CHECKSUM(";
+            foreach (var column in GetColumns(
+                sourceConnectionString, 
+                schema, 
+                table, 
+                fieldsToExclude,
+                typesToExclude,
+                exclude))
             {
-                sql += $"'{tableToExclude}',";
+                sql += $"[{column}],";
             }
+            sql = sql.TrimEnd(',') +
+                  $@") FROM [{schema}].[{table}]";
+            var entry = new DbComparerEntryResult { TableName = table };
+            using (var connection = new SqlConnection(sourceConnectionString))
+            {
+                entry.SourceChecksum = connection.ExecuteScalar<int>(sql);
+            }
+            using (var connection = new SqlConnection(targetConnectionString))
+            {
+                entry.TargetChecksum = connection.ExecuteScalar<int>(sql);
+            }
+            return entry;
+        }
 
-            sql = sql.TrimEnd(',') + ")";
-            using (var connection = new SqlConnection(_sourceConnectionString))
+        private static IEnumerable<(string, string)> GetTables(string connectionString, IEnumerable<string> schemas, IEnumerable<string> tables, bool exclude)
+        {
+            var sql = "SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES";
+            if (schemas.Any() || tables.Any())
+            {
+                sql += " WHERE ";
+            }
+            if (schemas.Any())
+            {
+                sql += $"TABLE_SCHEMA {(exclude?"NOT":"")} IN (";
+            }
+            foreach (var schema in schemas)
+            {
+                sql += $"'{schema}',";
+            }
+            if (schemas.Any())
+            {
+                sql = sql.TrimEnd(',') + ")";
+            }
+            if (tables.Any())
+            {
+                sql += $"{(schemas.Any() ? " AND " : "")}TABLE_NAME {(exclude ? "NOT" : "")} IN (";
+            }
+            foreach (var table in tables)
+            {
+                sql += $"'{table}',";
+            }
+            if (tables.Any())
+            {
+                sql = sql.TrimEnd(',') + ")";
+            }
+            using (var connection = new SqlConnection(connectionString))
             {
                 return connection.Query<(string, string)>(sql).ToList();
             }
         }
 
-        private IEnumerable<string> GetColumns(string tableName)
+        private static IEnumerable<string> GetColumns(string connectionString, string schema, string table, IEnumerable<string> fields, IEnumerable<string> typesToExclude, bool exclude)
         {
             var sql = $@"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE TABLE_NAME = '{tableName}'";
-            if (_fieldsToExclude.Any())
+                WHERE TABLE_SCHEMA = '{schema}' AND TABLE_NAME = '{table}'
+                AND COLUMNPROPERTY(object_id(TABLE_SCHEMA + '.' + TABLE_NAME), COLUMN_NAME, 'IsIdentity') = 0";
+            if (fields.Any())
             {
-                sql += " AND COLUMN_NAME NOT IN (";
+                sql += $" AND COLUMN_NAME {(exclude ? "NOT" : "")} IN (";
             }
-            foreach (var fieldToExclude in _fieldsToExclude)
+            foreach (var field in fields)
             {
-                sql += $"'{fieldToExclude}',";
+                sql += $"'{field}',";
             }
-            if (_fieldsToExclude.Any())
+            if (fields.Any())
             {
                 sql = sql.TrimEnd(',') + ")";
             }
-            sql += " AND DATA_TYPE NOT IN (";
-            foreach (var typeToExclude in _typesToExclude)
+            if (typesToExclude.Any())
+            {
+                sql += " AND DATA_TYPE NOT IN (";
+            }
+            foreach (var typeToExclude in typesToExclude)
             {
                 sql += $"'{typeToExclude}',";
             }
-            sql = sql.TrimEnd(',') + ")";
+            if (typesToExclude.Any())
+            {
+                sql = sql.TrimEnd(',') + ")";
+            }
             sql += " ORDER BY ORDINAL_POSITION";
-            using (var connection = new SqlConnection(_sourceConnectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 return connection.Query<string>(sql).ToList();
             }
