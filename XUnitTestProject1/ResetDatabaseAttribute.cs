@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Xunit.Sdk;
 
@@ -9,16 +12,20 @@ namespace XUnitTestProject1
     {
         private readonly bool _executeBefore;
         private readonly bool _executeAfter;
+        private readonly IEnumerable<string> _tablesToExclude;
+        private readonly IEnumerable<string> _fieldsToExclude;
 
-        public ResetDatabaseAttribute() : this(false, false)
+        public ResetDatabaseAttribute() : this(false, false, null, null)
         {
 
         }
 
-        public ResetDatabaseAttribute(bool executeBefore, bool executeAfter)
+        public ResetDatabaseAttribute(bool executeBefore, bool executeAfter, string[] tablesToExclude = null, string[] fieldsToExclude = null)
         {
             _executeBefore = executeBefore;
             _executeAfter = executeAfter;
+            _tablesToExclude = tablesToExclude;
+            _fieldsToExclude = fieldsToExclude;
         }
 
         public override void Before(MethodInfo methodUnderTest)
@@ -44,14 +51,27 @@ namespace XUnitTestProject1
 
         public override void After(MethodInfo methodUnderTest)
         {
-            HostFixture.ResetDatabaseAsync(after: true).Wait();
-
-            if (!_executeAfter)
+            if (_executeAfter)
             {
-                return;
+                ExecuteResource(methodUnderTest, after: true);
+                var dbComparer = new DbComparer(HostFixture.ConnectionString, HostFixture.ConnectionStringAfter,
+                    _tablesToExclude, _fieldsToExclude);
+                var result = dbComparer.Compare();
+                if (!result)
+                {
+                    var message = "Db checksums are not equal\n";
+                    message += $"Tables matched {result.Entries.Count(e => e.Match)}\n";
+                    message += $"Tables not matched {result.Entries.Count(e => !e.Match)}\n";
+                    foreach (var entry in result.Entries.Where(e => !e.Match))
+                    {
+                        message += $"{entry}\n";
+                    }
+
+                    throw new XunitException(message);
+                }
             }
 
-            ExecuteResource(methodUnderTest, after: true);
+            HostFixture.ResetDatabaseAsync(after: true).Wait();
         }
     }
 }

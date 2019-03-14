@@ -1,65 +1,102 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using Dapper;
 
 namespace XUnitTestProject1
 {
-    public class DbComparerEntryResult
-    {
-        public string TableName { get; set; }
-        public bool Match { get; set; }
-        public int SourceChecksum { get; set; }
-        public int TargetChecksum { get; set; }
-    }
-
-    public class DbComparerResult
-    {
-        public bool Match {
-            get
-            {
-                return Entries.All(e => e.Match);
-            }
-        }
-
-        public IEnumerable<DbComparerEntryResult> Entries { get; set; }
-
-        public static implicit operator bool(DbComparerResult result)
-        {
-            return result.Match;
-        }
-    }
-
     public class DbComparer
     {
         private readonly string _sourceConnectionString;
         private readonly string _targetConnectionString;
-        private readonly string[] _tablesToExclude = new[] { "__EFMigrationsHistory" };
-        private readonly string[] _fieldsToExclude = new[] { "Id" };
-        private readonly string[] _typesToExclude = new[] { "cursor", "image", "ntext", "text", "XML" };
+        private readonly IEnumerable<string> _tablesToExclude;
+        private readonly IEnumerable<string> _fieldsToExclude;
+        private readonly string[] _typesToExclude = { "cursor", "image", "ntext", "text", "XML" };
 
-        public DbComparer(string sourceConnectionString, string targetConnectionString)
+        public DbComparer(string sourceConnectionString, string targetConnectionString, IEnumerable<string> tablesToExclude,
+            IEnumerable<string> fieldsToExclude)
         {
-            _sourceConnectionString = sourceConnectionString;
-            _targetConnectionString = targetConnectionString;
+            _sourceConnectionString = sourceConnectionString ?? throw new ArgumentNullException(nameof(sourceConnectionString));
+            _targetConnectionString = targetConnectionString ?? throw new ArgumentNullException(nameof(targetConnectionString));
+            _tablesToExclude = new[] { "__EFMigrationsHistory" }.Union(tablesToExclude ?? Enumerable.Empty<string>());
+            _fieldsToExclude = new[] { "Id" }.Union(fieldsToExclude ?? Enumerable.Empty<string>());
         }
 
         public DbComparerResult Compare()
         {
             var result = new DbComparerResult();
-            using (var connection = new SqlConnection(_sourceConnectionString))
+
+            foreach (var (schema, table) in GetTables())
             {
-                using (var tablesCommand = connection.CreateCommand())
+                var sql = "SELECT CHECKSUM(";
+                foreach (var column in GetColumns(table))
                 {
-                    tablesCommand.CommandText = @"SELECT 
-                                                ";
+                    sql += $"[{column}],";
                 }
+                sql = sql.TrimEnd(',') +
+                          $@") FROM [{schema}].[{table}]";
+                var entry = new DbComparerEntryResult();
+                using (var connection = new SqlConnection(_sourceConnectionString))
+                {
+                    var checksum = connection.ExecuteScalar<int>(sql);
+                    entry.TableName = table;
+                    entry.SourceChecksum = checksum;
+                }
+                using (var connection = new SqlConnection(_targetConnectionString))
+                {
+                    var checksum = connection.ExecuteScalar<int>(sql);
+                    entry.TargetChecksum = checksum;
+                }
+                result.Entries.Add(entry);
             }
 
-                //TODO: Leer schema y excluir tablas
-                //TODO: Ejecutar para cada uno el checksum excluyendo fields y types
-                //TODO: Return entry
-                return result;
+            return result;
         }
 
+        private IEnumerable<(string, string)> GetTables()
+        {
+            var sql = @"SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+                      WHERE TABLE_NAME NOT IN (";
+            foreach (var tableToExclude in _tablesToExclude)
+            {
+                sql += $"'{tableToExclude}',";
+            }
+
+            sql = sql.TrimEnd(',') + ")";
+            using (var connection = new SqlConnection(_sourceConnectionString))
+            {
+                return connection.Query<(string, string)>(sql).ToList();
+            }
+        }
+
+        private IEnumerable<string> GetColumns(string tableName)
+        {
+            var sql = $@"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_NAME = '{tableName}'";
+            if (_fieldsToExclude.Any())
+            {
+                sql += " AND COLUMN_NAME NOT IN (";
+            }
+            foreach (var fieldToExclude in _fieldsToExclude)
+            {
+                sql += $"'{fieldToExclude}',";
+            }
+            if (_fieldsToExclude.Any())
+            {
+                sql = sql.TrimEnd(',') + ")";
+            }
+            sql += " AND DATA_TYPE NOT IN (";
+            foreach (var typeToExclude in _typesToExclude)
+            {
+                sql += $"'{typeToExclude}',";
+            }
+            sql = sql.TrimEnd(',') + ")";
+            sql += " ORDER BY ORDINAL_POSITION";
+            using (var connection = new SqlConnection(_sourceConnectionString))
+            {
+                return connection.Query<string>(sql).ToList();
+            }
+        }
     }
 }
