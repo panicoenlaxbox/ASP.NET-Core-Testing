@@ -1,38 +1,78 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Xunit.Sdk;
 
 namespace XUnitTestProject1
 {
+    public class DbComparer
+    {
+        private readonly string _sourceConnectionString;
+        private readonly string _targetConnectionString;
+
+        public DbComparer(string sourceConnectionString, string targetConnectionString)
+        {
+            _sourceConnectionString = sourceConnectionString;
+            _targetConnectionString = targetConnectionString;
+        }
+
+        public bool Compare()
+        {
+            return false;
+        }
+    }
+
+    public class DbComparerEntryResult
+    {
+
+    }
+
     public class ResetDatabaseAttribute : BeforeAfterTestAttribute
     {
-        private readonly bool _executeResource;
+        private readonly bool _executeBefore;
+        private readonly bool _executeAfter;
 
-        public ResetDatabaseAttribute() : this(false)
+        public ResetDatabaseAttribute() : this(false, false)
         {
 
         }
 
-        public ResetDatabaseAttribute(bool executeResource)
+        public ResetDatabaseAttribute(bool executeBefore, bool executeAfter)
         {
-            _executeResource = executeResource;
+            _executeBefore = executeBefore;
+            _executeAfter = executeAfter;
         }
 
         public override void Before(MethodInfo methodUnderTest)
         {
             HostFixture.ResetDatabaseAsync().Wait();
 
-            if (!_executeResource)
+            if (!_executeBefore)
             {
                 return;
             }
 
+            ExecuteResource(methodUnderTest, after: false);
+        }
+
+        private static void ExecuteResource(MethodInfo methodUnderTest, bool after)
+        {
             var assembly = typeof(ResetDatabaseAttribute).Assembly;
+            var resource =
+                $"{assembly.GetName().Name}.Sql.{methodUnderTest.DeclaringType.Name}.{methodUnderTest.Name}_{(after ? "after" : "before")}.sql";
+            var connectionString = after ? HostFixture.ConnectionStringAfter : HostFixture.ConnectionString;
+            SqlResourceExecutor.Execute(connectionString, assembly, resource);
+        }
 
-            var resource = $"{assembly.GetName().Name}.Sql.{methodUnderTest.DeclaringType.Name}.{methodUnderTest.Name}.sql";
+        public override void After(MethodInfo methodUnderTest)
+        {
+            HostFixture.ResetDatabaseAsync(after: true).Wait();
 
-            var a = assembly.GetManifestResourceNames();
+            if (!_executeAfter)
+            {
+                return;
+            }
 
-            SqlResourceExecutor.Execute(HostFixture.ConnectionString, assembly, resource);
+            ExecuteResource(methodUnderTest, after: true);
         }
     }
 }

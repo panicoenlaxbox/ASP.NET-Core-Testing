@@ -11,7 +11,7 @@ namespace ClassLibrary1
         }
         public DbSet<Customer> Customers { get; set; }
         
-        public DbSet<Customer> Countries { get; set; }
+        public DbSet<Country> Countries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

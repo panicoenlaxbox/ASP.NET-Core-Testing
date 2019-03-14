@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassLibrary1.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,8 @@ namespace ClassLibrary1
         {
             services
                 .AddMvcCore()
+                // https://stackoverflow.com/a/53314810
+                .AddApplicationPart(typeof(CustomersController).Assembly)
                 .AddAuthorization(options =>
                 {
                     options.AddPolicy("mypolicy", policy =>
@@ -19,7 +22,7 @@ namespace ClassLibrary1
                     });
                 })
                 .AddJsonFormatters()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             return services;
         }

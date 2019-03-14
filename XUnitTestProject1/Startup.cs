@@ -19,10 +19,11 @@ namespace XUnitTestProject1
 
         public void ConfigureServices(IServiceCollection services)
         {
-            ClassLibrary1.ClassLibrary1Configuration.ConfigureServices(services);
+            ClassLibrary1Configuration.ConfigureServices(services);
             services
-                .AddAuthentication(TestServerAuthenticationDefaults.AuthenticationScheme)
-                .AddTestServerAuthentication();
+                .AddAuthentication(TestServerDefaults.AuthenticationScheme)
+                .AddTestServer();
+
             services
                 .AddDbContext<ShopContext>(options =>
                 {

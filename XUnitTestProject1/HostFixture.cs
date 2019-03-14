@@ -4,6 +4,7 @@ using ClassLibrary1;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Respawn;
@@ -13,7 +14,10 @@ namespace XUnitTestProject1
     public class HostFixture : IDisposable
     {
         private static readonly Checkpoint Checkpoint = new Checkpoint();
+        private static readonly Checkpoint CheckpointAfter = new Checkpoint();
+
         public static string ConnectionString;
+        public static string ConnectionStringAfter { get; set; }
 
         public HostFixture()
         {
@@ -24,20 +28,30 @@ namespace XUnitTestProject1
                 .UseStartup<Startup>();
 
             Server = new TestServer(hostBuilder);
-           
+
             Server.Host.MigrateDbContext<ShopContext>(context =>
             {
                 // This tables have to be excluded in Checkpoint.TablesToIgnore if we want to have them in every test
                 // Furthermore, we could have data seeding in ef configurations with the HasData method
 
+                context.Countries.Add(new Country()
+                {
+                    Name = "United Kingdom"
+                });
 
-                //context.Customers.Add(new Customer()
-                //{
-                //    Name = "Customer 1"
-                //});
-
-                //context.SaveChanges();        
+                context.SaveChanges();
             });
+
+            ConnectionString = Configuration.GetConnectionString("DefaultConnection");
+            ConnectionStringAfter = Configuration.GetConnectionString("ConnectionAfter");
+
+            var options = new DbContextOptionsBuilder<ShopContext>()
+                .UseSqlServer(ConnectionStringAfter)
+                .Options;
+            using (var contextAfter = new ShopContext(options))
+            {
+                contextAfter.Database.Migrate();
+            }
 
             Checkpoint.TablesToIgnore = new[]
             {
@@ -45,14 +59,19 @@ namespace XUnitTestProject1
                 "Countries"
             };
 
-            ConnectionString = Configuration.GetConnectionString("DefaultConnection");
+            CheckpointAfter.TablesToIgnore = new[]
+            {
+                "__EFMigrationsHistory"
+            };
         }
+
 
         private IConfiguration Configuration => Server.Host.Services.GetService<IConfiguration>();
 
-        public static async Task ResetDatabaseAsync()
+        public static async Task ResetDatabaseAsync(bool after = false)
         {
-            await Checkpoint.Reset(ConnectionString);
+            var nameOrConnectionString = after ? ConnectionStringAfter : ConnectionString;
+            await Checkpoint.Reset(nameOrConnectionString);
         }
 
         public TestServer Server { get; set; }
