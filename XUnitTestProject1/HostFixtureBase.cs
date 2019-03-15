@@ -47,7 +47,7 @@ namespace XUnitTestProject1
                 action(serviceProvider.GetService<ShopContext>()));
         }
 
-        protected (string, string) ParseConnectionString()
+        protected (string, string) ParseConnectionStrings()
         {
             var unique = GetType().Name;
             return (

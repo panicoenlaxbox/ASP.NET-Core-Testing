@@ -15,7 +15,7 @@ namespace XUnitTestProject1
         public HostFixture()
         {
             // We must read configuration after host has been built
-            (ConnectionString, ConnectionStringAfter) = ParseConnectionString();
+            (ConnectionString, ConnectionStringAfter) = ParseConnectionStrings();
 
             // Update connection strings
             Configuration["ConnectionStrings:DefaultConnection"] = ConnectionString;
