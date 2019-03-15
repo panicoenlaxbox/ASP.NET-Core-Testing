@@ -114,6 +114,8 @@ namespace XUnitTestProject1
 
         private void ResetDatabase(bool after)
         {
+            // Reflection is required due to xUnit does not inject class fixture in this attribute,
+            // there is no context about current test
             var type = Type.GetType(_collectionFixture);
             var method = type.GetMethod("ResetDatabaseAsync", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(bool) }, null);
             var task = (Task)method.Invoke(null, new object[] { after });
