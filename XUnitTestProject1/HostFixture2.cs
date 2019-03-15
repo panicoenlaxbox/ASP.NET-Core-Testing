@@ -58,6 +58,7 @@ namespace XUnitTestProject1
             };
         }
 
+        // ReSharper disable once UnusedMember.Global
         public static async Task ResetDatabaseAsync(bool after = false)
         {
             var nameOrConnectionString = after ? ConnectionStringAfter : ConnectionString;
