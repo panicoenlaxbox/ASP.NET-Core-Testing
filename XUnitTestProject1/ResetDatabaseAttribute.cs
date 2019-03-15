@@ -18,7 +18,7 @@ namespace XUnitTestProject1
         private readonly IEnumerable<string> _fields;
         private readonly bool _exclude;
         private readonly bool _count;
-        private Lazy<Type> _collectionFixtureType;
+        private readonly Lazy<Type> _collectionFixtureType;
 
         public ResetDatabaseAttribute(
             string collectionFixture,
