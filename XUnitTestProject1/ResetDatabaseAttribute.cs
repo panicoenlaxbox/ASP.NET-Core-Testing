@@ -18,7 +18,6 @@ namespace XUnitTestProject1
         private readonly IEnumerable<string> _fields;
         private readonly bool _exclude;
         private readonly bool _count;
-        private readonly bool _resetAfter;
 
         public ResetDatabaseAttribute(
             string collectionFixture,
@@ -28,8 +27,7 @@ namespace XUnitTestProject1
             string[] tables = null,
             string[] fields = null,
             bool exclude = true,
-            bool count = false,
-            bool resetAfter = true)
+            bool count = false)
         {
             _collectionFixture = collectionFixture;
             _executeBefore = executeBefore;
@@ -39,7 +37,6 @@ namespace XUnitTestProject1
             _fields = fields;
             _exclude = exclude;
             _count = count;
-            _resetAfter = resetAfter;
         }
 
         public override void Before(MethodInfo methodUnderTest)
