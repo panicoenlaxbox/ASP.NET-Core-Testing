@@ -15,6 +15,7 @@ namespace XUnitTestProject1
         private readonly IEnumerable<string> _tables;
         private readonly IEnumerable<string> _fields;
         private readonly bool _exclude;
+        private readonly bool _count;
         private readonly IList<string> _typesToExclude;
 
         public DbComparer(
@@ -22,8 +23,9 @@ namespace XUnitTestProject1
             string targetConnectionString,
             IEnumerable<string> schemas,
             IEnumerable<string> tables,
-            IEnumerable<string> fields, 
-            bool exclude)
+            IEnumerable<string> fields,
+            bool exclude,
+            bool count)
         {
             _sourceConnectionString = sourceConnectionString ?? throw new ArgumentNullException(nameof(sourceConnectionString));
             _targetConnectionString = targetConnectionString ?? throw new ArgumentNullException(nameof(targetConnectionString));
@@ -34,11 +36,12 @@ namespace XUnitTestProject1
             }
             else
             {
-                _tables = tables ?? Enumerable.Empty<string>();
+                _tables = tables ?? throw new ArgumentNullException(nameof(tables));
             }
             _fields = fields ?? Enumerable.Empty<string>();
             // https://docs.microsoft.com/en-us/sql/t-sql/functions/checksum-transact-sql?view=sql-server-2017#arguments
             _exclude = exclude;
+            _count = count;
             _typesToExclude = new List<string>
             {
                 "cursor",
@@ -59,38 +62,58 @@ namespace XUnitTestProject1
         {
             var result = new DbComparerResult();
             foreach (var (schema, table) in GetTables(
-                _sourceConnectionString, 
-                _schemas, 
-                _tables, 
+                _sourceConnectionString,
+                _schemas,
+                _tables,
                 _exclude))
             {
                 result.Entries.Add(
                     CreateEntry(
-                        _sourceConnectionString, 
-                        _targetConnectionString, 
-                        schema, 
+                        _sourceConnectionString,
+                        _targetConnectionString,
+                        schema,
                         table,
                         _fields,
                         _typesToExclude,
                         _exclude));
             }
+
+            if (_count)
+            {
+                foreach (var entry in result.Entries.Where(e => !e.Match))
+                {
+                    entry.SourceCount = GetCount(_sourceConnectionString, entry.Schema, entry.Table);
+                    entry.TargetCount = GetCount(_targetConnectionString, entry.Schema, entry.Table);
+                }
+            }
+
             return result;
         }
 
+        private static int GetCount(string connectionString, string schema, string table)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                return connection.ExecuteScalar<int>(
+                    $"SELECT COUNT(*) FROM [{schema}].[{table}]");
+            }
+        }
+
         private static DbComparerEntryResult CreateEntry(
-            string sourceConnectionString, 
-            string targetConnectionString, 
-            string schema, 
-            string table, 
+            string sourceConnectionString,
+            string targetConnectionString,
+            string schema,
+            string table,
             IEnumerable<string> fieldsToExclude,
             IEnumerable<string> typesToExclude,
             bool exclude)
         {
-            var sql = "SELECT CHECKSUM(";
+            // https://stackoverflow.com/questions/1560306/calculate-hash-or-checksum-for-a-table-in-sql-server
+            var sql = "SELECT CHECKSUM_AGG(CHECKSUM(";
             foreach (var column in GetColumns(
-                sourceConnectionString, 
-                schema, 
-                table, 
+                sourceConnectionString,
+                schema,
+                table,
                 fieldsToExclude,
                 typesToExclude,
                 exclude))
@@ -98,8 +121,12 @@ namespace XUnitTestProject1
                 sql += $"[{column}],";
             }
             sql = sql.TrimEnd(',') +
-                  $@") FROM [{schema}].[{table}]";
-            var entry = new DbComparerEntryResult { TableName = table };
+                  $@")) FROM [{schema}].[{table}]";
+            var entry = new DbComparerEntryResult
+            {
+                Schema = schema,
+                Table = table
+            };
             using (var connection = new SqlConnection(sourceConnectionString))
             {
                 entry.SourceChecksum = connection.ExecuteScalar<int>(sql);
@@ -120,7 +147,7 @@ namespace XUnitTestProject1
             }
             if (schemas.Any())
             {
-                sql += $"TABLE_SCHEMA {(exclude?"NOT":"")} IN (";
+                sql += $"TABLE_SCHEMA {(exclude ? "NOT" : "")} IN (";
             }
             foreach (var schema in schemas)
             {

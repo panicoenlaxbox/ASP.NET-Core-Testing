@@ -1,3 +1,4 @@
+using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ClassLibrary1;
@@ -45,6 +46,7 @@ namespace XUnitTestProject1.Tests
         public async Task get_one_works()
         {
             // Arrange/Setup/Given
+
             //var customer = (Customer)Build.Customer().WithName("Customer 1");
 
             //var customer = CustomerObjectMother.CustomerWithName();
@@ -66,6 +68,7 @@ namespace XUnitTestProject1.Tests
             var id = customer.Id;
 
             // Act/Exercise/When
+
             var response = await _fixture.Server
                 .CreateHttpApiRequest<CustomersController>(controller => controller.Get(id))
                 .WithIdentity(new[]
@@ -75,13 +78,14 @@ namespace XUnitTestProject1.Tests
 
 
             // Assert/Verify/Then
+
             response.EnsureSuccessStatusCode();
 
             (await response.GetTo<Customer>()).Name.Should().Be("Customer 1");
         }
 
         [Fact]
-        [ResetDatabase(executeBefore: true, executeAfter: true, schemas: new[] { "dbo" }, tables: new[] { "Customers" }, exclude: false)]
+        [ResetDatabase(executeBefore: true, executeAfter: true, count: true)]
         public async Task get_one_with_sql_seeder_works()
         {
             Customer customer = null;
@@ -89,6 +93,8 @@ namespace XUnitTestProject1.Tests
             await _fixture.ExecuteDbContextAsync(async context =>
             {
                 customer = await context.Customers.FirstAsync();
+                customer.Name = "Customer 11";
+                context.SaveChanges();
             });
 
             var id = customer.Id;
@@ -99,10 +105,9 @@ namespace XUnitTestProject1.Tests
                     new Claim("myclaim", "myclaim value"),
                 }).GetAsync();
 
+            throw new DivideByZeroException();
+
             response.EnsureSuccessStatusCode();
-
-            (await response.GetTo<Customer>()).Name.Should().Be("Customer 1");
-
         }
     }
 

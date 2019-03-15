@@ -17,19 +17,18 @@ namespace XUnitTestProject1
         private readonly IEnumerable<string> _tables;
         private readonly IEnumerable<string> _fields;
         private readonly bool _exclude;
-
-        public ResetDatabaseAttribute() : this(false, false)
-        {
-
-        }
+        private readonly bool _count;
+        private readonly bool _resetAfter;
 
         public ResetDatabaseAttribute(
-            bool executeBefore, 
-            bool executeAfter,
+            bool executeBefore = false, 
+            bool executeAfter = false,
             string[] schemas = null, 
             string[] tables = null, 
             string[] fields = null,
-            bool exclude = true)
+            bool exclude = true,
+            bool count = false, 
+            bool resetAfter = true)
         {
             _executeBefore = executeBefore;
             _executeAfter = executeAfter;
@@ -37,6 +36,8 @@ namespace XUnitTestProject1
             _tables = tables;
             _fields = fields;
             _exclude = exclude;
+            _count = count;
+            _resetAfter = resetAfter;
         }
 
         public override void Before(MethodInfo methodUnderTest)
@@ -72,13 +73,15 @@ namespace XUnitTestProject1
             if (_executeAfter)
             {
                 ExecuteResource(methodUnderTest, after: true);
+
                 var dbComparer = new DbComparer(
                     HostFixture.ConnectionString, 
                     HostFixture.ConnectionStringAfter,
                     _schemas, 
                     _tables, 
                     _fields, 
-                    _exclude);
+                    _exclude,
+                    _count);
                 var result = dbComparer.Compare();
                 if (!result)
                 {
@@ -88,6 +91,12 @@ namespace XUnitTestProject1
                     foreach (var entry in result.Entries.Where(e => !e.Match))
                     {
                         message += $"{entry}\n";
+                    }
+
+                    // We must make sure that the next test is not dirty, because if we throw an exception, nothing else of this method will be executed
+                    if (_resetAfter)
+                    {
+                        HostFixture.ResetDatabaseAsync(after: true).Wait();
                     }
 
                     throw new Exception(message);
