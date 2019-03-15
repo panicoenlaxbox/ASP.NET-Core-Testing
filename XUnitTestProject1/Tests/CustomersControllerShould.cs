@@ -1,11 +1,9 @@
-using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ClassLibrary1;
 using ClassLibrary1.Controllers;
 using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -24,7 +22,7 @@ namespace XUnitTestProject1.Tests
         }
 
         [Fact]
-        [ResetDatabase]
+        [ResetDatabase(collectionFixture: "XUnitTestProject1.HostFixture")]
         public async Task get_all_works()
         {
             //var httpClient = _fixture.Server.CreateClient();
@@ -42,7 +40,7 @@ namespace XUnitTestProject1.Tests
         }
 
         [Fact]
-        [ResetDatabase]
+        [ResetDatabase(collectionFixture: "XUnitTestProject1.HostFixture")]
         public async Task get_one_works()
         {
             // Arrange/Setup/Given
@@ -83,33 +81,5 @@ namespace XUnitTestProject1.Tests
 
             (await response.GetTo<Customer>()).Name.Should().Be("Customer 1");
         }
-
-        [Fact]
-        [ResetDatabase(executeBefore: true, executeAfter: true, count: true)]
-        public async Task get_one_with_sql_seeder_works()
-        {
-            Customer customer = null;
-
-            await _fixture.ExecuteDbContextAsync(async context =>
-            {
-                customer = await context.Customers.FirstAsync();
-                customer.Name = "Customer 11";
-                context.SaveChanges();
-            });
-
-            var id = customer.Id;
-            var response = await _fixture.Server
-                .CreateHttpApiRequest<CustomersController>(controller => controller.Get(id))
-                .WithIdentity(new[]
-                {
-                    new Claim("myclaim", "myclaim value"),
-                }).GetAsync();
-
-            throw new DivideByZeroException();
-
-            response.EnsureSuccessStatusCode();
-        }
     }
-
-    // Use it if we don't use Acheve
 }

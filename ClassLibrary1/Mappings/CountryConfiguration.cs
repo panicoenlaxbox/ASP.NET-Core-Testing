@@ -11,10 +11,11 @@ namespace ClassLibrary1.Mappings
             builder.Property(c => c.Name).IsRequired();
             // Data seeding
             // During migration, ef will activate IDENTITY_INSERT
-            builder.HasData(
-                new Country() { Id = 1, Name = "Spain" },
-                new Country() { Id = 2, Name = "France" }
-            );
+
+            //builder.HasData(
+            //    new Country() { Id = 1, Name = "Spain" },
+            //    new Country() { Id = 2, Name = "France" }
+            //);
         }
     }
 }

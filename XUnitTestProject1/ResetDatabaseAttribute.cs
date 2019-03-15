@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Xunit.Sdk;
 
 namespace XUnitTestProject1
 {
-
     public class ResetDatabaseAttribute : BeforeAfterTestAttribute
     {
+        private readonly string _collectionFixture;
         private readonly bool _executeBefore;
         private readonly bool _executeAfter;
         private readonly string[] _schemas;
@@ -21,15 +21,17 @@ namespace XUnitTestProject1
         private readonly bool _resetAfter;
 
         public ResetDatabaseAttribute(
-            bool executeBefore = false, 
+            string collectionFixture,
+            bool executeBefore = false,
             bool executeAfter = false,
-            string[] schemas = null, 
-            string[] tables = null, 
+            string[] schemas = null,
+            string[] tables = null,
             string[] fields = null,
             bool exclude = true,
-            bool count = false, 
+            bool count = false,
             bool resetAfter = true)
         {
+            _collectionFixture = collectionFixture;
             _executeBefore = executeBefore;
             _executeAfter = executeAfter;
             _schemas = schemas;
@@ -42,7 +44,7 @@ namespace XUnitTestProject1
 
         public override void Before(MethodInfo methodUnderTest)
         {
-            HostFixture.ResetDatabaseAsync().Wait();
+            ResetDatabase(false);
 
             if (!_executeBefore)
             {
@@ -50,9 +52,19 @@ namespace XUnitTestProject1
             }
 
             ExecuteResource(methodUnderTest, after: false);
+
+            if (_executeAfter)
+            {
+                ResetDatabase(true);
+            }
         }
 
-        private static void ExecuteResource(MethodInfo methodUnderTest, bool after)
+        private object GetCollectionFixturePropertyValue(string propertyName)
+        {
+            return Type.GetType(_collectionFixture).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Static).GetValue(null, null);
+        }
+
+        private void ExecuteResource(MethodInfo methodUnderTest, bool after)
         {
             var assembly = typeof(ResetDatabaseAttribute).Assembly;
             var pattern = $@"{methodUnderTest.DeclaringType.Name}\.{methodUnderTest.Name}_{(after ? "after" : "before")}_?\d*\.sql$";
@@ -64,7 +76,9 @@ namespace XUnitTestProject1
                     resources.Add(resource);
                 }
             }
-            var connectionString = after ? HostFixture.ConnectionStringAfter : HostFixture.ConnectionString;
+            var connectionString = !after ?
+                (string)GetCollectionFixturePropertyValue("ConnectionString") :
+                (string)GetCollectionFixturePropertyValue("ConnectionStringAfter");
             SqlResourceExecutor.Execute(connectionString, assembly, resources);
         }
 
@@ -75,11 +89,11 @@ namespace XUnitTestProject1
                 ExecuteResource(methodUnderTest, after: true);
 
                 var dbComparer = new DbComparer(
-                    HostFixture.ConnectionString, 
-                    HostFixture.ConnectionStringAfter,
-                    _schemas, 
-                    _tables, 
-                    _fields, 
+                    (string)GetCollectionFixturePropertyValue("ConnectionString"),
+                    (string)GetCollectionFixturePropertyValue("ConnectionStringAfter"),
+                    _schemas,
+                    _tables,
+                    _fields,
                     _exclude,
                     _count);
                 var result = dbComparer.Compare();
@@ -93,17 +107,18 @@ namespace XUnitTestProject1
                         message += $"{entry}\n";
                     }
 
-                    // We must make sure that the next test is not dirty, because if we throw an exception, nothing else of this method will be executed
-                    if (_resetAfter)
-                    {
-                        HostFixture.ResetDatabaseAsync(after: true).Wait();
-                    }
-
                     throw new Exception(message);
                 }
             }
+        }
 
-            HostFixture.ResetDatabaseAsync(after: true).Wait();
+        private void ResetDatabase(bool after)
+        {
+            var type = Type.GetType(_collectionFixture);
+            var method = type.GetMethod("ResetDatabaseAsync", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(bool) }, null);
+            var task = (Task)method.Invoke(null, new object[] { after });
+            task.Wait();
+            //HostFixture.ResetDatabaseAsync(after).Wait();
         }
     }
 }
