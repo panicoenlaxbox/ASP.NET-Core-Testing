@@ -1,3 +1,4 @@
+using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ClassLibrary1;
@@ -22,7 +23,7 @@ namespace XUnitTestProject1.Tests
         }
 
         [Fact]
-        [ResetDatabase(collectionFixture: "XUnitTestProject1.HostFixture2", executeBefore: true, executeAfter: true, count: true)]
+        [ResetDatabase(collectionFixture: "HostFixture2", executeBefore: true, executeAfter: true, count: true)]
         public async Task get_one_with_sql_seeder_works()
         {
             Customer customer = null;

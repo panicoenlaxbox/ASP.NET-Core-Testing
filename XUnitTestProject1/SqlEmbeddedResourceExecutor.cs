@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace XUnitTestProject1
 {
-    public class SqlResourceExecutor
+    public class SqlEmbeddedResourceExecutor
     {
         public static void Execute(string connectionString, Assembly assembly, IEnumerable<string> resources)
         {

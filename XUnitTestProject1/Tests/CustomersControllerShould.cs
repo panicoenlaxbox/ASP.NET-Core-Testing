@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ClassLibrary1;
@@ -37,6 +39,7 @@ namespace XUnitTestProject1.Tests
                 }).GetAsync();
 
             response.EnsureSuccessStatusCode();
+            (await response.GetTo<IEnumerable<Customer>>()).Count().Should().Be(0);
         }
 
         [Fact]

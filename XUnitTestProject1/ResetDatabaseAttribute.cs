@@ -18,6 +18,7 @@ namespace XUnitTestProject1
         private readonly IEnumerable<string> _fields;
         private readonly bool _exclude;
         private readonly bool _count;
+        private Lazy<Type> _collectionFixtureType;
 
         public ResetDatabaseAttribute(
             string collectionFixture,
@@ -37,31 +38,62 @@ namespace XUnitTestProject1
             _fields = fields;
             _exclude = exclude;
             _count = count;
+            _collectionFixtureType = new Lazy<Type>(GetCollectionFixtureType);
         }
 
-        public override void Before(MethodInfo methodUnderTest)
+        public override async void Before(MethodInfo methodUnderTest)
         {
-            ResetDatabase(false);
+            await ResetDatabase(false);
 
             if (!_executeBefore)
             {
                 return;
             }
 
-            ExecuteResource(methodUnderTest, after: false);
+            ExecuteEmbeddedResource(methodUnderTest, after: false);
 
             if (_executeAfter)
             {
-                ResetDatabase(true);
+                await ResetDatabase(true);
+            }
+        }
+
+        public override void After(MethodInfo methodUnderTest)
+        {
+            if (_executeAfter)
+            {
+                ExecuteEmbeddedResource(methodUnderTest, after: true);
+
+                var dbComparer = new DbComparer(
+                    (string)GetCollectionFixturePropertyValue("ConnectionString"),
+                    (string)GetCollectionFixturePropertyValue("ConnectionStringAfter"),
+                    _schemas,
+                    _tables,
+                    _fields,
+                    _exclude,
+                    _count);
+                var result = dbComparer.Compare();
+                if (!result)
+                {
+                    var message = "Comparison failed\n";
+                    message += $"Tables matched {result.Entries.Count(e => e.Match)}\n";
+                    message += $"Tables not matched {result.Entries.Count(e => !e.Match)}\n";
+                    foreach (var entry in result.Entries.Where(e => !e.Match))
+                    {
+                        message += $"{entry}\n";
+                    }
+
+                    throw new Exception(message);
+                }
             }
         }
 
         private object GetCollectionFixturePropertyValue(string propertyName)
         {
-            return Type.GetType(_collectionFixture).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Static).GetValue(null, null);
+            return _collectionFixtureType.Value.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Static).GetValue(null, null);
         }
 
-        private void ExecuteResource(MethodInfo methodUnderTest, bool after)
+        private void ExecuteEmbeddedResource(MethodInfo methodUnderTest, bool after)
         {
             var assembly = typeof(ResetDatabaseAttribute).Assembly;
             var pattern = $@"{methodUnderTest.DeclaringType.Name}\.{methodUnderTest.Name}_{(after ? "after" : "before")}_?\d*\.sql$";
@@ -76,48 +108,29 @@ namespace XUnitTestProject1
             var connectionString = !after ?
                 (string)GetCollectionFixturePropertyValue("ConnectionString") :
                 (string)GetCollectionFixturePropertyValue("ConnectionStringAfter");
-            SqlResourceExecutor.Execute(connectionString, assembly, resources);
+            SqlEmbeddedResourceExecutor.Execute(connectionString, assembly, resources);
         }
 
-        public override void After(MethodInfo methodUnderTest)
-        {
-            if (_executeAfter)
-            {
-                ExecuteResource(methodUnderTest, after: true);
-
-                var dbComparer = new DbComparer(
-                    (string)GetCollectionFixturePropertyValue("ConnectionString"),
-                    (string)GetCollectionFixturePropertyValue("ConnectionStringAfter"),
-                    _schemas,
-                    _tables,
-                    _fields,
-                    _exclude,
-                    _count);
-                var result = dbComparer.Compare();
-                if (!result)
-                {
-                    var message = "Db checksums are not equal\n";
-                    message += $"Tables matched {result.Entries.Count(e => e.Match)}\n";
-                    message += $"Tables not matched {result.Entries.Count(e => !e.Match)}\n";
-                    foreach (var entry in result.Entries.Where(e => !e.Match))
-                    {
-                        message += $"{entry}\n";
-                    }
-
-                    throw new Exception(message);
-                }
-            }
-        }
-
-        private void ResetDatabase(bool after)
+        private Task ResetDatabase(bool after)
         {
             // Reflection is required due to xUnit does not inject class fixture in this attribute,
             // there is no context about current test
-            var type = Type.GetType(_collectionFixture);
-            var method = type.GetMethod("ResetDatabaseAsync", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(bool) }, null);
+            var method = _collectionFixtureType.Value.GetMethod("ResetDatabaseAsync", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(bool) }, null);
             var task = (Task)method.Invoke(null, new object[] { after });
-            task.Wait();
+            //task.Wait();
+            return task;
             //HostFixture.ResetDatabaseAsync(after).Wait();
+        }
+
+        private Type GetCollectionFixtureType()
+        {
+            var type = Type.GetType(_collectionFixture);
+            if (type != null)
+            {
+                return type;
+            }
+
+            return Assembly.GetExecutingAssembly().GetTypes().Single(t => t.Name.EndsWith(_collectionFixture));
         }
     }
 }
