@@ -110,7 +110,9 @@ namespace XUnitTestProject1.Helpers
             bool exclude)
         {
             // https://stackoverflow.com/questions/1560306/calculate-hash-or-checksum-for-a-table-in-sql-server
-            var sql = "SELECT CHECKSUM_AGG(CHECKSUM(";
+            // https://stackoverflow.com/questions/11994430/what-conditions-cause-checksum-agg-to-return-0
+            
+            var sql = "SELECT SUM(CAST(CHECKSUM(";
             foreach (var column in GetColumns(
                 sourceConnectionString,
                 schema,
@@ -122,7 +124,7 @@ namespace XUnitTestProject1.Helpers
                 sql += $"[{column}],";
             }
             sql = sql.TrimEnd(',') +
-                  $@")) FROM [{schema}].[{table}]";
+                  $@") AS BIGINT)) FROM [{schema}].[{table}]";
             var entry = new DbComparerEntryResult
             {
                 Schema = schema,

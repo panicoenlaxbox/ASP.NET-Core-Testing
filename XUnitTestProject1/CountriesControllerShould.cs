@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
-using XUnitTestProject1.Helpers;
 using XUnitTestProject1.Infrastructure.Fixtures;
 
 namespace XUnitTestProject1
@@ -24,16 +23,16 @@ namespace XUnitTestProject1
         }
 
         [Fact]
-        [ResetDatabase(fixture: nameof(CountriesFixture), executeBefore: true, executeAfter: true, count: true)]
+        [EnhancedResetDatabase(fixture: nameof(CountriesFixture), executeBefore: true, executeAfter: true, count:true)]
         public async Task get_one_works()
         {
             Country country = null;
 
             await Fixture.ExecuteDbContextAsync(async context =>
             {
-                country = await context.Countries.FirstAsync();
-                //customer.Name = "Customer 11";
-                //context.SaveChanges();
+                country = new Country() { Name = "Ireland" };
+                context.Countries.Add(country);
+                await context.SaveChangesAsync();
             });
 
             var id = country.Id;

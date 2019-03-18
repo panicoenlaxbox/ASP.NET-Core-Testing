@@ -5,8 +5,8 @@
         public string Schema { get; set; }
         public string Table { get; set; }
         public bool Match => SourceChecksum == TargetChecksum;
-        public int SourceChecksum { get; set; }
-        public int TargetChecksum { get; set; }
+        public long SourceChecksum { get; set; }
+        public long TargetChecksum { get; set; }
         public int? SourceCount { get; set; }
         public int? TargetCount { get; set; }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Threading.Tasks;
 using ClassLibrary1;
 using Microsoft.AspNetCore;
@@ -55,15 +56,27 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
                 string.Format(Configuration.GetConnectionString("ConnectionAfter"), $"{unique}_after"));
         }
 
-        protected void CreateDatabase(string connectionString)
+        protected void CreateDatabase<T>(string connectionString) where T : DbContext
         {
-            var options = new DbContextOptionsBuilder<ShopContext>()
+            CreateDatabase<T>(connectionString, _ => { });
+        }
+
+        protected void CreateDatabase<T>(string connectionString, Action<T> seeder) where T : DbContext
+        {
+            using (var context = CreateDbContext<T>(connectionString))
+            {
+                context.Database.EnsureDeleted();
+                context.Database.Migrate();
+                seeder(context);
+            }
+        }
+
+        private static T CreateDbContext<T>(string connectionString) where T : DbContext
+        {
+            var options = new DbContextOptionsBuilder<T>()
                 .UseSqlServer(connectionString)
                 .Options;
-            using (var contextAfter = new ShopContext(options))
-            {
-                contextAfter.Database.Migrate();
-            }
+            return (T)Activator.CreateInstance(typeof(T), options);
         }
     }
 }

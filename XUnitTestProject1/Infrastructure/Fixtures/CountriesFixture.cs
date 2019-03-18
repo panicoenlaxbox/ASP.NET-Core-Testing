@@ -21,11 +21,10 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
             Configuration["ConnectionStrings:DefaultConnection"] = ConnectionString;
             Configuration["ConnectionStrings:ConnectionAfter"] = ConnectionStringAfter;
 
-            Server.Host.MigrateDbContext<ShopContext>(context =>
+            CreateDatabase<ShopContext>(ConnectionString, context =>
             {
                 // This tables have to be excluded in Checkpoint.TablesToIgnore if we want to have them in every test
                 // Furthermore, we could have data seeding in ef configurations with the HasData method
-
                 context.Countries.AddRange(new Country[] {
                     new Country()
                     {
@@ -40,11 +39,10 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
                         Name = "United Kingdom"
                     }
                 });
-
                 context.SaveChanges();
             });
 
-            CreateDatabase(ConnectionStringAfter);
+            CreateDatabase<ShopContext>(ConnectionStringAfter);
 
             Checkpoint.TablesToIgnore = new[]
             {

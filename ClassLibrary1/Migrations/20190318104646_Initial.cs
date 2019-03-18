@@ -32,16 +32,6 @@ namespace ClassLibrary1.Migrations
                 {
                     table.PrimaryKey("PK_Customers", x => x.Id);
                 });
-
-            migrationBuilder.InsertData(
-                table: "Countries",
-                columns: new[] { "Id", "Name" },
-                values: new object[] { 1, "Spain" });
-
-            migrationBuilder.InsertData(
-                table: "Countries",
-                columns: new[] { "Id", "Name" },
-                values: new object[] { 2, "France" });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
