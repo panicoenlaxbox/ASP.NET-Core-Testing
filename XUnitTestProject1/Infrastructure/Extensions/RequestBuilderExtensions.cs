@@ -1,8 +1,8 @@
-﻿using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace XUnitTestProject1
+// ReSharper disable once CheckNamespace
+namespace System.Net.Http
 {
     public static class RequestBuilderExtensions
     {

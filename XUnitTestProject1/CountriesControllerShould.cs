@@ -1,4 +1,3 @@
-using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ClassLibrary1;
@@ -7,37 +6,39 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
+using XUnitTestProject1.Helpers;
+using XUnitTestProject1.Infrastructure.Fixtures;
 
-namespace XUnitTestProject1.Tests
+namespace XUnitTestProject1
 {
-    [Collection("HostCollectionFixture2")]
-    public class CustomersController2Should
+    [Collection("CountriesCollection")]
+    public class CountriesControllerShould
     {
-        public readonly HostFixture2 Fixture;
+        public readonly CountriesFixture Fixture;
         private readonly ITestOutputHelper _logger;
 
-        public CustomersController2Should(HostFixture2 fixture, ITestOutputHelper logger)
+        public CountriesControllerShould(CountriesFixture fixture, ITestOutputHelper logger)
         {
             Fixture = fixture;
             _logger = logger;
         }
 
         [Fact]
-        [ResetDatabase(collectionFixture: "HostFixture2", executeBefore: true, executeAfter: true, count: true)]
-        public async Task get_one_with_sql_seeder_works()
+        [ResetDatabase(fixture: nameof(CountriesFixture), executeBefore: true, executeAfter: true, count: true)]
+        public async Task get_one_works()
         {
-            Customer customer = null;
+            Country country = null;
 
             await Fixture.ExecuteDbContextAsync(async context =>
             {
-                customer = await context.Customers.FirstAsync();
+                country = await context.Countries.FirstAsync();
                 //customer.Name = "Customer 11";
                 //context.SaveChanges();
             });
 
-            var id = customer.Id;
+            var id = country.Id;
             var response = await Fixture.Server
-                .CreateHttpApiRequest<CustomersController>(controller => controller.Get(id))
+                .CreateHttpApiRequest<CountriesController>(controller => controller.Get(id))
                 .WithIdentity(new[]
                 {
                     new Claim("myclaim", "myclaim value"),

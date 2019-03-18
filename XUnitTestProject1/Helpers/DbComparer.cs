@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using Dapper;
+
 // ReSharper disable PossibleMultipleEnumeration
 
-namespace XUnitTestProject1
+namespace XUnitTestProject1.Helpers
 {
     public class DbComparer
     {

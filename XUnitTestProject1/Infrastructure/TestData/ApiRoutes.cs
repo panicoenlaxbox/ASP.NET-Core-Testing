@@ -1,7 +1,7 @@
-namespace XUnitTestProject1
+namespace XUnitTestProject1.Infrastructure.TestData
 {
     // Use it if we don't use Acheve
-    public static class Api
+    public static class ApiRoutes
     {
         public static class Get
         {

@@ -5,12 +5,13 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit.Sdk;
+using XUnitTestProject1.Helpers;
 
-namespace XUnitTestProject1
+namespace XUnitTestProject1.Infrastructure.Fixtures
 {
     public class ResetDatabaseAttribute : BeforeAfterTestAttribute
     {
-        private readonly string _collectionFixture;
+        private readonly string _fixture;
         private readonly bool _executeBefore;
         private readonly bool _executeAfter;
         private readonly string[] _schemas;
@@ -21,7 +22,7 @@ namespace XUnitTestProject1
         private readonly Lazy<Type> _collectionFixtureType;
 
         public ResetDatabaseAttribute(
-            string collectionFixture,
+            string fixture,
             bool executeBefore = false,
             bool executeAfter = false,
             string[] schemas = null,
@@ -30,7 +31,7 @@ namespace XUnitTestProject1
             bool exclude = true,
             bool count = false)
         {
-            _collectionFixture = collectionFixture;
+            _fixture = fixture;
             _executeBefore = executeBefore;
             _executeAfter = executeAfter;
             _schemas = schemas;
@@ -124,13 +125,13 @@ namespace XUnitTestProject1
 
         private Type GetCollectionFixtureType()
         {
-            var type = Type.GetType(_collectionFixture);
+            var type = Type.GetType(_fixture);
             if (type != null)
             {
                 return type;
             }
 
-            return Assembly.GetExecutingAssembly().GetTypes().Single(t => t.Name.EndsWith(_collectionFixture));
+            return Assembly.GetExecutingAssembly().GetTypes().Single(t => t.Name.EndsWith(_fixture));
         }
     }
 }

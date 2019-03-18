@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace XUnitTestProject1
+namespace XUnitTestProject1.Infrastructure.Fixtures
 {
     class Startup
     {

@@ -1,6 +1,6 @@
 using ClassLibrary1;
 
-namespace XUnitTestProject1
+namespace XUnitTestProject1.Infrastructure.TestData
 {
     public static class Given
     {

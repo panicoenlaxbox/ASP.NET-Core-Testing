@@ -8,12 +8,12 @@
   <ItemGroup>
     <None Remove="appsettings.json" />
     <None Remove="CustomersControllerShould.get_one_with_sql_seeder_works.sql" />
-    <None Remove="Sql\CustomersController2Should.get_one_with_sql_seeder_works_after.sql" />
+    <None Remove="Sql\CountriesControllerShould.get_one_works_after.sql" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Sql\CustomersController2Should.get_one_with_sql_seeder_works_after.sql" />
-    <EmbeddedResource Include="Sql\CustomersController2Should.get_one_with_sql_seeder_works_before.sql" />
+    <EmbeddedResource Include="Sql\CountriesControllerShould.get_one_works_after.sql" />
+    <EmbeddedResource Include="Sql\CountriesControllerShould.get_one_works_before.sql" />
   </ItemGroup>
 
   <ItemGroup>

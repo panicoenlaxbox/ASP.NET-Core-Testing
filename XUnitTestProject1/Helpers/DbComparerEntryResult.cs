@@ -1,4 +1,4 @@
-﻿namespace XUnitTestProject1
+﻿namespace XUnitTestProject1.Helpers
 {
     public class DbComparerEntryResult
     {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ClassLibrary1;
@@ -8,28 +9,31 @@ using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
 using Xunit;
 using Xunit.Abstractions;
+using XUnitTestProject1.Helpers;
+using XUnitTestProject1.Infrastructure.Fixtures;
+using XUnitTestProject1.Infrastructure.TestData;
 
-namespace XUnitTestProject1.Tests
+namespace XUnitTestProject1
 {
-    [Collection("HostCollectionFixture")]
+    [Collection("CustomersCollection")]
     public class CustomersControllerShould
     {
-        private readonly HostFixture _fixture;
+        private readonly CustomersFixture _fixture;
         private readonly ITestOutputHelper _logger;
 
-        public CustomersControllerShould(HostFixture fixture, ITestOutputHelper logger)
+        public CustomersControllerShould(CustomersFixture fixture, ITestOutputHelper logger)
         {
             _fixture = fixture;
             _logger = logger;
         }
 
         [Fact]
-        [ResetDatabase(collectionFixture: "XUnitTestProject1.HostFixture")]
+        [ResetDatabase(fixture: nameof(CustomersFixture))]
         public async Task get_all_works()
         {
             //var httpClient = _fixture.Server.CreateClient();
             //var response2 = await httpClient.GetAsync("api/customers");
-            //var response3 = await httpClient.GetAsync(Api.Get.Customer());
+            //var response3 = await httpClient.GetAsync(ApiRoutes.Get.Customer());
 
             var response = await _fixture.Server
                 .CreateHttpApiRequest<CustomersController>(controller => controller.Get())
@@ -43,7 +47,7 @@ namespace XUnitTestProject1.Tests
         }
 
         [Fact]
-        [ResetDatabase(collectionFixture: "XUnitTestProject1.HostFixture")]
+        [ResetDatabase(fixture: nameof(CustomersFixture))]
         public async Task get_one_works()
         {
             // Arrange/Setup/Given
@@ -65,7 +69,7 @@ namespace XUnitTestProject1.Tests
             });
 
             //var httpClient = _fixture.Server.CreateClient();
-            //var response = await httpClient.GetAsync(Api.Get.Customer(1));
+            //var response = await httpClient.GetAsync(ApiRoutes.Get.Customer(1));
             var id = customer.Id;
 
             // Act/Exercise/When

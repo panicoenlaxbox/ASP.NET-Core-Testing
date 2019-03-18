@@ -8,14 +8,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace XUnitTestProject1
+namespace XUnitTestProject1.Infrastructure.Fixtures
 {
-    public abstract class HostFixtureBase : IDisposable
+    public abstract class IntegrationFixtureBase : IDisposable
     {
         protected IConfiguration Configuration => Server.Host.Services.GetService<IConfiguration>();
         public TestServer Server { get; set; }
 
-        protected HostFixtureBase()
+        protected IntegrationFixtureBase()
         {
             //var hostBuilder = new WebHostBuilder()
             //    .UseStartup<Startup>();

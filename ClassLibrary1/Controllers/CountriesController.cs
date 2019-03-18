@@ -9,30 +9,30 @@ namespace ClassLibrary1.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize("mypolicy")]
-    public class CustomersController : ControllerBase
+    public class CountriesController : ControllerBase
     {
         private readonly ShopContext _context;
 
-        public CustomersController(ShopContext context)
+        public CountriesController(ShopContext context)
         {
             _context = context;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Customer>>> Get()
+        public async Task<ActionResult<IEnumerable<Country>>> Get()
         {
-            return await _context.Customers.ToListAsync();
+            return await _context.Countries.ToListAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Customer>> Get(int id)
+        public async Task<ActionResult<Country>> Get(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
+            var country = await _context.Countries.FindAsync(id);
+            if (country == null)
             {
                 return NotFound(id);
             }
-            return customer;
+            return country;
         }
     }
 }

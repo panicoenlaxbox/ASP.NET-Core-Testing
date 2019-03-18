@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace XUnitTestProject1
+namespace XUnitTestProject1.Helpers
 {
     public class SqlEmbeddedResourceExecutor
     {
