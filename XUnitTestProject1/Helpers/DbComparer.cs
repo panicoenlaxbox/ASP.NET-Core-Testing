@@ -61,22 +61,23 @@ namespace XUnitTestProject1.Helpers
 
         public DbComparerResult Compare()
         {
-            var result = new DbComparerResult();
-            foreach (var (schema, table) in GetTables(
+           var result = new DbComparerResult();
+            var tables = GetTables(
                 _sourceConnectionString,
                 _schemas,
                 _tables,
-                _exclude))
+                _exclude);
+            foreach (var (schema, table) in tables)
             {
-                result.Entries.Add(
-                    CreateEntry(
-                        _sourceConnectionString,
-                        _targetConnectionString,
-                        schema,
-                        table,
-                        _fields,
-                        _typesToExclude,
-                        _exclude));
+                var entry = CreateEntry(
+                    _sourceConnectionString,
+                    _targetConnectionString,
+                    schema,
+                    table,
+                    _fields,
+                    _typesToExclude,
+                    _exclude);
+                result.Entries.Add(entry);
             }
 
             if (_count)
@@ -132,11 +133,11 @@ namespace XUnitTestProject1.Helpers
             };
             using (var connection = new SqlConnection(sourceConnectionString))
             {
-                entry.SourceChecksum = connection.ExecuteScalar<int>(sql);
+                entry.SourceChecksum = connection.ExecuteScalar<long>(sql);
             }
             using (var connection = new SqlConnection(targetConnectionString))
             {
-                entry.TargetChecksum = connection.ExecuteScalar<int>(sql);
+                entry.TargetChecksum = connection.ExecuteScalar<long>(sql);
             }
             return entry;
         }

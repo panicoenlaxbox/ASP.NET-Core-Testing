@@ -28,7 +28,7 @@ namespace XUnitTestProject1
         }
 
         [Fact]
-        [EnhancedResetDatabase(fixture: nameof(CustomersFixture))]
+        [ResetDatabase(fixture: nameof(CustomersFixture))]
         public async Task get_all_works()
         {
             //var httpClient = _fixture.Server.CreateClient();
@@ -47,7 +47,7 @@ namespace XUnitTestProject1
         }
 
         [Fact]
-        [EnhancedResetDatabase(fixture: nameof(CustomersFixture))]
+        [ResetDatabase(fixture: nameof(CustomersFixture))]
         public async Task get_one_works()
         {
             // Arrange/Setup/Given

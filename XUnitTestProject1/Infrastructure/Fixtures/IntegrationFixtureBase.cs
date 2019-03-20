@@ -56,12 +56,12 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
                 string.Format(Configuration.GetConnectionString("ConnectionAfter"), $"{unique}_after"));
         }
 
-        protected void CreateDatabase<T>(string connectionString) where T : DbContext
+        protected void DropAndCreateDatabase<T>(string connectionString) where T : DbContext
         {
-            CreateDatabase<T>(connectionString, _ => { });
+            DropAndCreateDatabase<T>(connectionString, _ => { });
         }
 
-        protected void CreateDatabase<T>(string connectionString, Action<T> seeder) where T : DbContext
+        protected void DropAndCreateDatabase<T>(string connectionString, Action<T> seeder) where T : DbContext
         {
             using (var context = CreateDbContext<T>(connectionString))
             {

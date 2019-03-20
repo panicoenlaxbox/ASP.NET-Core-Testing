@@ -1,19 +1,23 @@
 ﻿using System.Threading.Tasks;
 using ClassLibrary1;
-using Microsoft.AspNetCore.Hosting;
 using Respawn;
+using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace XUnitTestProject1.Infrastructure.Fixtures
 {
-    public class CustomersFixture : IntegrationFixtureBase
+    public class OmpFixture : IntegrationFixtureBase
     {
         private static readonly Checkpoint Checkpoint = new Checkpoint();
         private static readonly Checkpoint CheckpointAfter = new Checkpoint();
         public static string ConnectionString { get; set; }
         public static string ConnectionStringAfter { get; set; }
 
-        public CustomersFixture()
+        public OmpFixture(IMessageSink messageSink)
         {
+            var message = new DiagnosticMessage("I will appear in dotnet test");
+            messageSink.OnMessage(message);
+
             // We must read configuration after host has been built
             (ConnectionString, ConnectionStringAfter) = ParseConnectionStrings();
 
@@ -21,25 +25,13 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
             Configuration["ConnectionStrings:DefaultConnection"] = ConnectionString;
             Configuration["ConnectionStrings:ConnectionAfter"] = ConnectionStringAfter;
 
-            DropAndCreateDatabase<ShopContext>(ConnectionString, context =>
-            {
-                // This tables have to be excluded in Checkpoint.TablesToIgnore if we want to have them in every test
-                // Furthermore, we could have data seeding in ef configurations with the HasData method
-
-                context.Countries.Add(new Country()
-                {
-                    Name = "United Kingdom"
-                });
-
-                context.SaveChanges();
-            });
+            DropAndCreateDatabase<ShopContext>(ConnectionString, _ => { });
 
             DropAndCreateDatabase<ShopContext>(ConnectionStringAfter);
 
             Checkpoint.TablesToIgnore = new[]
             {
-                "__EFMigrationsHistory",
-                "Countries"
+                "__EFMigrationsHistory"
             };
 
             CheckpointAfter.TablesToIgnore = new[]

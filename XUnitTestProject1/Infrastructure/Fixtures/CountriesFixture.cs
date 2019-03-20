@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using ClassLibrary1;
-using Microsoft.AspNetCore.Hosting;
 using Respawn;
 
 namespace XUnitTestProject1.Infrastructure.Fixtures
@@ -21,7 +20,7 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
             Configuration["ConnectionStrings:DefaultConnection"] = ConnectionString;
             Configuration["ConnectionStrings:ConnectionAfter"] = ConnectionStringAfter;
 
-            CreateDatabase<ShopContext>(ConnectionString, context =>
+            DropAndCreateDatabase<ShopContext>(ConnectionString, context =>
             {
                 // This tables have to be excluded in Checkpoint.TablesToIgnore if we want to have them in every test
                 // Furthermore, we could have data seeding in ef configurations with the HasData method
@@ -42,7 +41,7 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
                 context.SaveChanges();
             });
 
-            CreateDatabase<ShopContext>(ConnectionStringAfter);
+            DropAndCreateDatabase<ShopContext>(ConnectionStringAfter);
 
             Checkpoint.TablesToIgnore = new[]
             {

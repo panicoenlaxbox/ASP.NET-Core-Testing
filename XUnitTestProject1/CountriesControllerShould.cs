@@ -11,6 +11,7 @@ using XUnitTestProject1.Infrastructure.Fixtures;
 namespace XUnitTestProject1
 {
     [Collection("CountriesCollection")]
+
     public class CountriesControllerShould
     {
         public readonly CountriesFixture Fixture;
@@ -23,7 +24,7 @@ namespace XUnitTestProject1
         }
 
         [Fact]
-        [EnhancedResetDatabase(fixture: nameof(CountriesFixture), executeBefore: true, executeAfter: true, count:true)]
+        [ResetDatabase(fixture: nameof(CountriesFixture))]
         public async Task get_one_works()
         {
             Country country = null;

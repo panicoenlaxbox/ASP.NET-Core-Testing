@@ -23,7 +23,7 @@ namespace WebApplication1
                 .AddCors()
                 .AddDbContext<ShopContext>(options =>
                     {
-                        options.UseSqlServer(@"Server=(LocalDB)\MSSQLLocalDB;Database=MyShop;Trusted_Connection=True;");
+                        options.UseSqlServer(@"Server=.;Database=OMP;Trusted_Connection=True;");
                     });
         }
 
