@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Threading.Tasks;
 using Dapper;
 
 // ReSharper disable PossibleMultipleEnumeration
@@ -22,11 +23,11 @@ namespace XUnitTestProject1.Helpers
         public DbComparer(
             string sourceConnectionString,
             string targetConnectionString,
-            IEnumerable<string> schemas,
-            IEnumerable<string> tables,
-            IEnumerable<string> fields,
-            bool exclude,
-            bool count)
+            IEnumerable<string> schemas = null,
+            IEnumerable<string> tables = null,
+            IEnumerable<string> fields = null,
+            bool exclude = true,
+            bool count = false)
         {
             _sourceConnectionString = sourceConnectionString ?? throw new ArgumentNullException(nameof(sourceConnectionString));
             _targetConnectionString = targetConnectionString ?? throw new ArgumentNullException(nameof(targetConnectionString));
@@ -59,17 +60,17 @@ namespace XUnitTestProject1.Helpers
             };
         }
 
-        public DbComparerResult Compare()
+        public async Task<DbComparerResult> CompareAsync()
         {
-           var result = new DbComparerResult();
-            var tables = GetTables(
+            var result = new DbComparerResult();
+            var tables = await GetTablesAsync(
                 _sourceConnectionString,
                 _schemas,
                 _tables,
                 _exclude);
             foreach (var (schema, table) in tables)
             {
-                var entry = CreateEntry(
+                var entry = await CreateEntryAsync(
                     _sourceConnectionString,
                     _targetConnectionString,
                     schema,
@@ -84,24 +85,24 @@ namespace XUnitTestProject1.Helpers
             {
                 foreach (var entry in result.Entries.Where(e => !e.Match))
                 {
-                    entry.SourceCount = GetCount(_sourceConnectionString, entry.Schema, entry.Table);
-                    entry.TargetCount = GetCount(_targetConnectionString, entry.Schema, entry.Table);
+                    entry.SourceCount = await GetCountAsync(_sourceConnectionString, entry.Schema, entry.Table);
+                    entry.TargetCount = await GetCountAsync(_targetConnectionString, entry.Schema, entry.Table);
                 }
             }
 
             return result;
         }
 
-        private static int GetCount(string connectionString, string schema, string table)
+        private static async Task<int> GetCountAsync(string connectionString, string schema, string table)
         {
             using (var connection = new SqlConnection(connectionString))
             {
-                return connection.ExecuteScalar<int>(
+                return await connection.ExecuteScalarAsync<int>(
                     $"SELECT COUNT(*) FROM [{schema}].[{table}]");
             }
         }
 
-        private static DbComparerEntryResult CreateEntry(
+        private static async Task<DbComparerEntryResult> CreateEntryAsync(
             string sourceConnectionString,
             string targetConnectionString,
             string schema,
@@ -112,15 +113,16 @@ namespace XUnitTestProject1.Helpers
         {
             // https://stackoverflow.com/questions/1560306/calculate-hash-or-checksum-for-a-table-in-sql-server
             // https://stackoverflow.com/questions/11994430/what-conditions-cause-checksum-agg-to-return-0
-            
+
             var sql = "SELECT SUM(CAST(CHECKSUM(";
-            foreach (var column in GetColumns(
+            var columns = await GetColumnsAsync(
                 sourceConnectionString,
                 schema,
                 table,
                 fieldsToExclude,
                 typesToExclude,
-                exclude))
+                exclude);
+            foreach (var column in columns)
             {
                 sql += $"[{column}],";
             }
@@ -133,16 +135,16 @@ namespace XUnitTestProject1.Helpers
             };
             using (var connection = new SqlConnection(sourceConnectionString))
             {
-                entry.SourceChecksum = connection.ExecuteScalar<long>(sql);
+                entry.SourceChecksum = await connection.ExecuteScalarAsync<long>(sql);
             }
             using (var connection = new SqlConnection(targetConnectionString))
             {
-                entry.TargetChecksum = connection.ExecuteScalar<long>(sql);
+                entry.TargetChecksum = await connection.ExecuteScalarAsync<long>(sql);
             }
             return entry;
         }
 
-        private static IEnumerable<(string, string)> GetTables(string connectionString, IEnumerable<string> schemas, IEnumerable<string> tables, bool exclude)
+        private static async Task<IEnumerable<(string, string)>> GetTablesAsync(string connectionString, IEnumerable<string> schemas, IEnumerable<string> tables, bool exclude)
         {
             var sql = "SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES";
             if (schemas.Any() || tables.Any())
@@ -175,11 +177,11 @@ namespace XUnitTestProject1.Helpers
             }
             using (var connection = new SqlConnection(connectionString))
             {
-                return connection.Query<(string, string)>(sql).ToList();
+                return await connection.QueryAsync<(string, string)>(sql);
             }
         }
 
-        private static IEnumerable<string> GetColumns(string connectionString, string schema, string table, IEnumerable<string> fields, IEnumerable<string> typesToExclude, bool exclude)
+        private static async Task<IEnumerable<string>> GetColumnsAsync(string connectionString, string schema, string table, IEnumerable<string> fields, IEnumerable<string> typesToExclude, bool exclude)
         {
             var sql = $@"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_SCHEMA = '{schema}' AND TABLE_NAME = '{table}'
@@ -211,7 +213,7 @@ namespace XUnitTestProject1.Helpers
             sql += " ORDER BY ORDINAL_POSITION";
             using (var connection = new SqlConnection(connectionString))
             {
-                return connection.Query<string>(sql).ToList();
+                return await connection.QueryAsync<string>(sql);
             }
         }
     }

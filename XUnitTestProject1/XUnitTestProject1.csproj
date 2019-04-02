@@ -8,16 +8,8 @@
   <ItemGroup>
     <None Remove="appsettings.json" />
     <None Remove="CustomersControllerShould.get_one_with_sql_seeder_works.sql" />
-    <None Remove="Sql\CountriesControllerShould.get_one_works_after.sql" />
     <None Remove="Sql\OmpControllerShould.works_after.sql" />
     <None Remove="Sql\OmpControllerShould.works_before.sql" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Sql\CountriesControllerShould.get_one_works_after.sql" />
-    <EmbeddedResource Include="Sql\CountriesControllerShould.get_one_works_before.sql" />
-    <EmbeddedResource Include="Sql\OmpControllerShould.works_after.sql" />
-    <EmbeddedResource Include="Sql\OmpControllerShould.works_before.sql" />
   </ItemGroup>
 
   <ItemGroup>

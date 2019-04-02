@@ -1,8 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.Threading.Tasks;
 using ClassLibrary1;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.Logging;
 using Respawn;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace XUnitTestProject1.Infrastructure.Fixtures
 {
@@ -15,8 +17,8 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
 
         public OmpFixture(IMessageSink messageSink)
         {
-            var message = new DiagnosticMessage("I will appear in dotnet test");
-            messageSink.OnMessage(message);
+            //var message = new DiagnosticMessage("I will appear in dotnet test");
+            //messageSink.OnMessage(message);
 
             // We must read configuration after host has been built
             (ConnectionString, ConnectionStringAfter) = ParseConnectionStrings();
@@ -43,8 +45,13 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
         // ReSharper disable once UnusedMember.Global
         public static async Task ResetDatabaseAsync(bool after = false)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             var connectionString = after ? ConnectionStringAfter : ConnectionString;
             await Checkpoint.Reset(connectionString);
+
+            stopwatch.Stop();
+            Logger.LogDebug($"{nameof(ResetDatabaseAsync)}, {connectionString} {stopwatch.Elapsed:g}");
         }
     }
 }

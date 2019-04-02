@@ -14,13 +14,11 @@ namespace XUnitTestProject1
 
     public class CountriesControllerShould
     {
-        public readonly CountriesFixture Fixture;
-        private readonly ITestOutputHelper _logger;
+        private readonly CountriesFixture _fixture;
 
-        public CountriesControllerShould(CountriesFixture fixture, ITestOutputHelper logger)
+        public CountriesControllerShould(CountriesFixture fixture)
         {
-            Fixture = fixture;
-            _logger = logger;
+            _fixture = fixture;
         }
 
         [Fact]
@@ -29,7 +27,7 @@ namespace XUnitTestProject1
         {
             Country country = null;
 
-            await Fixture.ExecuteDbContextAsync(async context =>
+            await _fixture.ExecuteDbContextAsync(async context =>
             {
                 country = new Country() { Name = "Ireland" };
                 context.Countries.Add(country);
@@ -37,7 +35,7 @@ namespace XUnitTestProject1
             });
 
             var id = country.Id;
-            var response = await Fixture.Server
+            var response = await _fixture.Server
                 .CreateHttpApiRequest<CountriesController>(controller => controller.Get(id))
                 .WithIdentity(new[]
                 {

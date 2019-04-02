@@ -24,5 +24,20 @@ namespace XUnitTestProject1.Helpers
         {
             return result.Match;
         }
+
+        public string Prettify()
+        {
+            var value = $"Comparison {(!Match ? "failed" : "success")}\n";
+            if (!Match)
+            {
+                value += $"Tables matched {Entries.Count(e => e.Match)}\n";
+                value += $"Tables not matched {Entries.Count(e => !e.Match)}\n";
+                foreach (var entry in Entries.Where(e => !e.Match))
+                {
+                    value += $"{entry}\n";
+                }
+            }
+            return value;
+        }
     }
 }

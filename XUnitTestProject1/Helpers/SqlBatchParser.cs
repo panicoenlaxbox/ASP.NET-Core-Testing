@@ -21,6 +21,8 @@ namespace XUnitTestProject1.Helpers
     {
         public string Table => Statements.First().Table;
 
+        public int Count => Inserts.Sum(stmt => (int)stmt.BatchSize);
+
         public ParsedStatement IdentityInsertOn
         {
             get

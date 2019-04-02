@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using ClassLibrary1;
 using Microsoft.AspNetCore;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace XUnitTestProject1.Infrastructure.Fixtures
 {
@@ -15,6 +17,7 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
     {
         protected IConfiguration Configuration => Server.Host.Services.GetService<IConfiguration>();
         public TestServer Server { get; set; }
+        protected static ILogger Logger { get; set; }
 
         protected IntegrationFixtureBase()
         {
@@ -26,6 +29,11 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
 
             // Build host
             Server = new TestServer(hostBuilder);
+        }
+
+        public void SetLogger<T>(ILogger<T> logger)
+        {
+            Logger = logger;
         }
 
         public void Dispose()

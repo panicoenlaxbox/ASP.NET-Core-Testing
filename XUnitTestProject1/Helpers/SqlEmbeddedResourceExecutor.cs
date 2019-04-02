@@ -1,31 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Xunit.Abstractions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace XUnitTestProject1.Helpers
 {
     public class SqlEmbeddedResourceExecutor
     {
-        public static async Task ExecuteAsync(string connectionString, Assembly assembly, IEnumerable<string> resources, ITestOutputHelper logger)
+        private readonly ILogger _logger;
+
+        public SqlEmbeddedResourceExecutor()
         {
-            foreach (var resource in resources.OrderBy(r => r))
+            _logger = NullLogger.Instance;
+        }
+
+        public SqlEmbeddedResourceExecutor(ILogger logger)
+        {
+            _logger = logger;
+        }
+
+        public async Task ExecuteAsync(string connectionString, Assembly assembly, IEnumerable<string> resources)
+        {
+            foreach (var resource in resources)
             {
-                await ExecuteAsync(connectionString, assembly, resource, logger);
+                await ExecuteAsync(connectionString, assembly, resource);
             }
         }
 
-        public static async Task ExecuteAsync(string connectionString, Assembly assembly, string resource, ITestOutputHelper logger)
+        public async Task ExecuteAsync(string connectionString, Assembly assembly, string resource)
         {
-            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-            if (resource == null) throw new ArgumentNullException(nameof(resource));
+            _logger.LogDebug($"Starting {nameof(ExecuteAsync)}");
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -39,10 +49,10 @@ namespace XUnitTestProject1.Helpers
 
                 using (var streamReader = new StreamReader(stream))
                 {
-                    var stopwatch3 = Stopwatch.StartNew();
+                    var internalStopwatch = Stopwatch.StartNew();
                     statementSets = SqlBatchParser.ParseScriptData(streamReader, batchSize: 50);
-                    stopwatch3.Stop();
-                    logger.WriteLine($"ParseScripData {stopwatch3.Elapsed:g}");
+                    internalStopwatch.Stop();
+                    _logger.LogDebug($"ParseScripData {resource} {internalStopwatch.Elapsed:g}");
                 }
             }
 
@@ -50,12 +60,14 @@ namespace XUnitTestProject1.Helpers
             {
                 if (statementSet is ParsedInsertStatementSet insertStatementSet)
                 {
-                    var stopwatch2 = Stopwatch.StartNew();
+                    var internalStopwatch = Stopwatch.StartNew();
 
                     const int numberOfTasks = 8;
                     var tasks = new List<Task>(); ;
 
                     var currentTaskIndex = 0;
+
+                    _logger.LogDebug($"{insertStatementSet.Table} {insertStatementSet.Count}");
 
                     foreach (var statement in insertStatementSet.Inserts)
                     {
@@ -80,8 +92,8 @@ namespace XUnitTestProject1.Helpers
                     Task.WaitAll(tasks.ToArray());
                     //tasks.ForEach(t => t?.Dispose());
 
-                    stopwatch2.Stop();
-                    logger.WriteLine($"{insertStatementSet.Table} {stopwatch2.Elapsed:g}");
+                    internalStopwatch.Stop();
+                    _logger.LogDebug($"{insertStatementSet.Table} {internalStopwatch.Elapsed:g}");
                 }
                 else
                 {
@@ -93,7 +105,18 @@ namespace XUnitTestProject1.Helpers
             }
 
             stopwatch.Stop();
-            logger.WriteLine($"Total {stopwatch.Elapsed:g}");
+            _logger.LogDebug($"Ending {nameof(ExecuteAsync)} {stopwatch.Elapsed:g}");
+        }
+
+        public async Task ExecuteAsync(string connectionString, Assembly assembly, string type, string methodName, string suffix)
+        {
+            var finder = new SqlEmbeddedResourceFinder();
+            var resources = finder.Find(assembly, type, methodName, new[] { suffix });
+            if (!resources[suffix].Any())
+            {
+                throw new Exception($"There are no '{suffix}' resources to execute");
+            }
+            await ExecuteAsync(connectionString, assembly, resources[suffix]);
         }
 
         private static async Task ExecuteCommandAsync(string connectionString, string commandText)
