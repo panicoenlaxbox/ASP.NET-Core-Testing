@@ -27,12 +27,21 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
             ResetDatabase(true);
         }
 
-        private void ResetDatabase(bool after)
+        private void ResetDatabase(bool expected)
         {
             // Reflection is required due to xUnit does not inject class fixture in this attribute,
             // so there is no context about current test
-            var method = _fixtureType.Value.GetMethod("ResetDatabaseAsync", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(bool) }, null);
-            ((Task)method.Invoke(null, new object[] { after })).Wait();
+            const string name = "ResetDatabaseAsync";
+            var method = _fixtureType.Value.GetMethod(name, BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(bool) }, null);
+            if (method != null)
+            {
+                ((Task) method.Invoke(null, new object[] {expected})).Wait();
+            }
+            else
+            {
+                method = _fixtureType.Value.GetMethod(name, BindingFlags.Public | BindingFlags.Static);
+                ((Task)method.Invoke(null, null)).Wait();
+            }
         }
 
         private Type GetFixtureType()

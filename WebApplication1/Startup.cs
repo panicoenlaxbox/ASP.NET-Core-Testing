@@ -22,9 +22,9 @@ namespace WebApplication1
             ClassLibrary1Configuration.ConfigureServices(services)
                 .AddCors()
                 .AddDbContext<ShopContext>(options =>
-                    {
-                        options.UseSqlServer(@"Server=.;Database=OMP;Trusted_Connection=True;");
-                    });
+                {
+                    options.UseSqlServer(@"Server=.;Database=Shop;Trusted_Connection=True;");
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

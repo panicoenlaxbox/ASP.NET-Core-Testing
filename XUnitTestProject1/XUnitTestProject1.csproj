@@ -8,8 +8,13 @@
   <ItemGroup>
     <None Remove="appsettings.json" />
     <None Remove="CustomersControllerShould.get_one_with_sql_seeder_works.sql" />
-    <None Remove="Sql\OmpControllerShould.works_after.sql" />
-    <None Remove="Sql\OmpControllerShould.works_before.sql" />
+    <None Remove="Sql\ComparisionDatabaseExampleShould.simple_example_actual.sql" />
+    <None Remove="Sql\ComparisionDatabaseExampleShould.simple_example_expected.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Sql\ComparisionDatabaseExampleShould.simple_example_expected.sql" />
+    <EmbeddedResource Include="Sql\ComparisionDatabaseExampleShould.simple_example_actual.sql" />
   </ItemGroup>
 
   <ItemGroup>

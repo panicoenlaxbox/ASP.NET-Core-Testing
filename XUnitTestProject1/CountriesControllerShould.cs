@@ -1,11 +1,11 @@
+using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ClassLibrary1;
 using ClassLibrary1.Controllers;
+using FluentAssertions;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
 using Xunit;
-using Xunit.Abstractions;
 using XUnitTestProject1.Infrastructure.Fixtures;
 
 namespace XUnitTestProject1
@@ -23,7 +23,7 @@ namespace XUnitTestProject1
 
         [Fact]
         [ResetDatabase(fixture: nameof(CountriesFixture))]
-        public async Task get_one_works()
+        public async Task get_one()
         {
             Country country = null;
 
@@ -43,6 +43,9 @@ namespace XUnitTestProject1
                 }).GetAsync();
 
             response.EnsureSuccessStatusCode();
+
+            (await response.GetAsyncTo<Country>()).Should().BeEquivalentTo(
+                new Country() { Id = id, Name = "Ireland" });
         }
     }
 }

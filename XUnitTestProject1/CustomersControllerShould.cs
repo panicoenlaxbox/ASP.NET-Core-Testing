@@ -29,7 +29,7 @@ namespace XUnitTestProject1
 
         [Fact]
         [ResetDatabase(fixture: nameof(CustomersFixture))]
-        public async Task get_all_works()
+        public async Task get_all()
         {
             //var httpClient = _fixture.Server.CreateClient();
             //var response2 = await httpClient.GetAsync("api/customers");
@@ -43,12 +43,12 @@ namespace XUnitTestProject1
                 }).GetAsync();
 
             response.EnsureSuccessStatusCode();
-            (await response.GetTo<IEnumerable<Customer>>()).Count().Should().Be(0);
+            (await response.GetAsyncTo<IEnumerable<Customer>>()).Count().Should().Be(0);
         }
 
         [Fact]
         [ResetDatabase(fixture: nameof(CustomersFixture))]
-        public async Task get_one_works()
+        public async Task get_one()
         {
             // Arrange/Setup/Given
 
@@ -86,7 +86,7 @@ namespace XUnitTestProject1
 
             response.EnsureSuccessStatusCode();
 
-            (await response.GetTo<Customer>()).Name.Should().Be("Customer 1");
+            (await response.GetAsyncTo<Customer>()).Name.Should().Be("Customer 1");
         }
     }
 }

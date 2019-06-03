@@ -1,0 +1,7 @@
+﻿CREATE OR ALTER PROCEDURE FixCountries
+AS
+BEGIN
+	SET NOCOUNT ON;
+
+	UPDATE dbo.Countries SET [Name] = LTRIM(RTRIM([Name]));    
+END

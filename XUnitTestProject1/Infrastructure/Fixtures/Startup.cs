@@ -1,4 +1,6 @@
-﻿using Acheve.AspNetCore.TestHost.Security;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Acheve.AspNetCore.TestHost.Security;
 using Acheve.TestHost;
 using ClassLibrary1;
 using Microsoft.AspNetCore.Builder;
@@ -29,8 +31,7 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
                 .AddDbContext<ShopContext>(options =>
                 {
                     // appsettings.json, Copy to Output Directory: Copy if newer
-                    var connectionString = Configuration.GetConnectionString("DefaultConnection");
-                    options.UseSqlServer(connectionString);
+                    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
                 });
         }
 

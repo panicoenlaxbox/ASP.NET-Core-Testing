@@ -9,34 +9,34 @@ using Xunit.Abstractions;
 using XUnitTestProject1.Helpers;
 using XUnitTestProject1.Infrastructure.Loggers;
 
-namespace XUnitTestProject1
+namespace XUnitTestProject1.Infrastructure
 {
-    public abstract class DatabaseTestCaseBase
+    public abstract class ComparisionDatabaseTestCaseBase
     {
-        protected async Task ExecuteAsync(string connectionString, string methodName, bool after)
+        protected async Task ExecuteAsync(string connectionString, string methodName, bool expected)
         {
-            await ExecuteAsync(connectionString, methodName, after, NullLogger.Instance);
+            await ExecuteAsync(connectionString, methodName, expected, NullLogger.Instance);
         }
 
-        protected async Task ExecuteAsync(string connectionString, string methodName, bool after, ILogger logger)
+        protected async Task ExecuteAsync(string connectionString, string methodName, bool expected, ILogger logger)
         {
             var executor = new SqlEmbeddedResourceExecutor(logger);
-            await executor.ExecuteAsync(connectionString, Assembly.GetExecutingAssembly(), GetType().Name, methodName, after ? "after" : "before");
+            await executor.ExecuteAsync(connectionString, Assembly.GetExecutingAssembly(), GetType().Name, methodName, expected ? "expected" : "actual");
         }
 
-        protected async Task CompareAsync(string connectionString, string connectionStringAfter)
+        protected async Task CompareAsync(string actualConnectionString, string expectedConnectionString)
         {
-            await CompareAsync(connectionString, connectionStringAfter, NullLogger.Instance);
+            await CompareAsync(actualConnectionString, expectedConnectionString, NullLogger.Instance);
         }
 
-        protected async Task CompareAsync(string connectionString, string connectionStringAfter, ILogger logger)
+        protected async Task CompareAsync(string actualConnectionString, string expectedConnectionString, ILogger logger)
         {
             logger.LogDebug("Starting comparision");
             var stopwatch = Stopwatch.StartNew();
 
             var dbComparer = new DbComparer(
-                connectionString,
-                connectionStringAfter,
+                actualConnectionString,
+                expectedConnectionString,
                 count: true);
             var comparerResult = await dbComparer.CompareAsync();
             if (!comparerResult)

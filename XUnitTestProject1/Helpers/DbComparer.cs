@@ -34,7 +34,7 @@ namespace XUnitTestProject1.Helpers
             _schemas = schemas ?? Enumerable.Empty<string>();
             if (exclude)
             {
-                _tables = new[] { "__EFMigrationsHistory", "sysdiagrams" }.Union(tables ?? Enumerable.Empty<string>());
+                _tables = new[] { "__EFMigrationsHistory", "SchemaVersions", "sysdiagrams" }.Union(tables ?? Enumerable.Empty<string>());
             }
             else
             {

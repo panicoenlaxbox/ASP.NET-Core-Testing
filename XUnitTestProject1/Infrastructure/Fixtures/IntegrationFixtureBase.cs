@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using ClassLibrary1;
 using Microsoft.AspNetCore;
@@ -56,14 +57,6 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
                 action(serviceProvider.GetService<ShopContext>()));
         }
 
-        protected (string, string) ParseConnectionStrings()
-        {
-            var unique = GetType().Name;
-            return (
-                string.Format(Configuration.GetConnectionString("DefaultConnection"), unique),
-                string.Format(Configuration.GetConnectionString("ConnectionAfter"), $"{unique}_after"));
-        }
-
         protected void DropAndCreateDatabase<T>(string connectionString) where T : DbContext
         {
             DropAndCreateDatabase<T>(connectionString, _ => { });
@@ -75,6 +68,19 @@ namespace XUnitTestProject1.Infrastructure.Fixtures
             {
                 context.Database.EnsureDeleted();
                 context.Database.Migrate();
+
+                #region SqlMigrator
+                //var builder = new SqlMigratorOptionsBuilder();
+                //builder.WithLogger(Server.Host.Services.GetService<ILoggerFactory>()
+                //    .CreateLogger<SqlMigrator.SqlMigrator>());
+                //builder.WithConnectionString(connectionString);
+                //var folder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                //builder.WithExecutionFolder(folder);
+
+                //var migrator = new SqlMigrator.SqlMigrator(builder.Build());
+                //migrator.Run();
+                #endregion
+
                 seeder(context);
             }
         }
