@@ -1,3 +1,0 @@
-DROP INDEX [IX_RoizingAssortmentCells_RoizingAssortmentIdIncludingRowPeriodQuantityAndCost] ON [dbo].[RoizingAssortmentCells]
-DROP INDEX IX_RoizingAssortmentCells_RoizingAssortmentPeriodId ON [dbo].[RoizingAssortmentCells]
-DROP INDEX IX_RoizingAssortmentCells_RoizingAssortmentRowId ON [dbo].[RoizingAssortmentCells]
