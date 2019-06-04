@@ -24,20 +24,22 @@ namespace Api.Tests.Infrastructure
             await executor.ExecuteAsync(connectionString, Assembly.GetExecutingAssembly(), GetType().Name, methodName, expected ? "expected" : "actual");
         }
 
-        protected async Task CompareAsync(string actualConnectionString, string expectedConnectionString)
+        protected async Task CompareAsync(string sourceConnectionString, string targetConnectionString)
         {
-            await CompareAsync(actualConnectionString, expectedConnectionString, NullLogger.Instance);
+            await CompareAsync(sourceConnectionString, targetConnectionString, NullLogger.Instance);
         }
 
-        protected async Task CompareAsync(string actualConnectionString, string expectedConnectionString, ILogger logger)
+        protected async Task CompareAsync(string sourceConnectionString, string targetConnectionString, ILogger logger)
+        {
+            await CompareAsync(new DbComparerOptions(sourceConnectionString, targetConnectionString), logger);
+        }
+
+        protected async Task CompareAsync(DbComparerOptions options, ILogger logger)
         {
             logger.LogDebug("Starting comparision");
             var stopwatch = Stopwatch.StartNew();
 
-            var dbComparer = new DbComparer(
-                actualConnectionString,
-                expectedConnectionString,
-                count: true);
+            var dbComparer = new DbComparer(options);
             var comparerResult = await dbComparer.CompareAsync();
             if (!comparerResult)
             {
