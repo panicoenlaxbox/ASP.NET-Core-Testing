@@ -1,0 +1,25 @@
+
+Api.Tests.ComparisionDatabaseExampleShould [0] ResetDatabaseAsync, Server=.;Database=ComparisionDatabaseExampleFixture_actual;Trusted_Connection=True;MultipleActiveResultSets=true 0:00:00,091373
+Api.Tests.ComparisionDatabaseExampleShould [0] Starting ExecuteAsync
+Api.Tests.ComparisionDatabaseExampleShould [0] ParseScriptData Api.Tests.Sql.ComparisionDatabaseExampleShould.simple_example_actual.sql.zip Test_A.sql 0:00:00,0032091
+Api.Tests.ComparisionDatabaseExampleShould [0] ParseScriptData Api.Tests.Sql.ComparisionDatabaseExampleShould.simple_example_actual.sql.zip Test_B.sql 0:00:00,000059
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Countries] 2
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Countries] 0:00:00,0059494
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Customers] 1
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Customers] 0:00:00,001472
+Api.Tests.ComparisionDatabaseExampleShould [0] Ending ExecuteStatementSetsAsync Test_A.sql 0:00:00,016435
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Countries] 1
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Countries] 0:00:00,0013656
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Customers] 1
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Customers] 0:00:00,0008504
+Api.Tests.ComparisionDatabaseExampleShould [0] Ending ExecuteStatementSetsAsync Test_B.sql 0:00:00,0073612
+Api.Tests.ComparisionDatabaseExampleShould [0] Ending ExecuteAsync 0:00:00,0327992
+Api.Tests.ComparisionDatabaseExampleShould [0] Starting ExecuteAsync
+Api.Tests.ComparisionDatabaseExampleShould [0] ParseScriptData Api.Tests.Sql.ComparisionDatabaseExampleShould.simple_example_expected.sql 0:00:00,0000524
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Countries] 3
+Api.Tests.ComparisionDatabaseExampleShould [0] [dbo].[Countries] 0:00:00,0018978
+Api.Tests.ComparisionDatabaseExampleShould [0] Ending ExecuteStatementSetsAsync Api.Tests.Sql.ComparisionDatabaseExampleShould.simple_example_expected.sql 0:00:00,0050917
+Api.Tests.ComparisionDatabaseExampleShould [0] Ending ExecuteAsync 0:00:00,0052326
+Api.Tests.ComparisionDatabaseExampleShould [0] Starting comparision
+Api.Tests.ComparisionDatabaseExampleShould [0] Ending comparision 0:00:00,1039348
+Api.Tests.ComparisionDatabaseExampleShould [0] ResetDatabaseAsync, Server=.;Database=ComparisionDatabaseExampleFixture_expected;Trusted_Connection=True;MultipleActiveResultSets=true 0:00:00,0019385

@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Api.Tests.Helpers;
 using Api.Tests.Infrastructure;
 using Api.Tests.Infrastructure.Fixtures;
 using Microsoft.Extensions.Logging;
@@ -38,10 +39,9 @@ namespace Api.Tests
             // Assert
             await ExecuteAsync(ComparisionDatabaseExampleFixture.ExpectedConnectionString, methodName, expected: true, logger: _logger);
 
-            await CompareAsync(
-                ComparisionDatabaseExampleFixture.ActualConnectionString, 
-                ComparisionDatabaseExampleFixture.ExpectedConnectionString, 
-                _logger);
+            var options = new DbComparerOptions(ComparisionDatabaseExampleFixture.ActualConnectionString,
+                ComparisionDatabaseExampleFixture.ExpectedConnectionString, count: true, tables: new[] { "Countries" }, exclude: false);
+            await CompareAsync(options, _logger);
         }
     }
 }

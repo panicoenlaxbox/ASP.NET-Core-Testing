@@ -12,6 +12,18 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Api.Tests.Helpers
 {
+    public class SqlResourceStatementSet
+    {
+        public string Resource { get; }
+        public IEnumerable<ParsedStatementSet> ParsedStatementSets { get; }
+
+        public SqlResourceStatementSet(string resource, IEnumerable<ParsedStatementSet> parsedStatementSets)
+        {
+            Resource = resource;
+            ParsedStatementSets = parsedStatementSets;
+        }
+    }
+
     public class SqlEmbeddedResourceExecutor
     {
         private readonly ILogger _logger;
@@ -40,20 +52,23 @@ namespace Api.Tests.Helpers
 
             var stopwatch = Stopwatch.StartNew();
 
-            var statementSets = GetStatementSets(assembly, resource, batchSize);
+            var sqlResourceStatementSets = GetSqlResourceStatementSets(assembly, resource, batchSize);
 
-            await ExecuteStatementSetsAsync(connectionString, statementSets);
+            foreach (var sqlResourceStatementSet in sqlResourceStatementSets)
+            {
+                await ExecuteStatementSetsAsync(connectionString, sqlResourceStatementSet);
+            }
 
             stopwatch.Stop();
 
             _logger.LogDebug($"Ending {nameof(ExecuteAsync)} {stopwatch.Elapsed:g}");
         }
 
-        private async Task ExecuteStatementSetsAsync(string connectionString, IEnumerable<ParsedStatementSet> statementSets)
+        private async Task ExecuteStatementSetsAsync(string connectionString, SqlResourceStatementSet sqlResourceStatementSet)
         {
             var stopwatch = Stopwatch.StartNew();
 
-            foreach (var statementSet in statementSets)
+            foreach (var statementSet in sqlResourceStatementSet.ParsedStatementSets)
             {
                 if (statementSet is ParsedInsertStatementSet insertStatementSet)
                 {
@@ -104,14 +119,12 @@ namespace Api.Tests.Helpers
 
             stopwatch.Stop();
 
-            _logger.LogDebug($"Ending {nameof(ExecuteStatementSetsAsync)} {stopwatch.Elapsed:g}");
+            _logger.LogDebug($"Ending {nameof(ExecuteStatementSetsAsync)} {sqlResourceStatementSet.Resource} {stopwatch.Elapsed:g}");
         }
 
-        private IEnumerable<ParsedStatementSet> GetStatementSets(Assembly assembly, string resource, int batchSize)
+        private IEnumerable<SqlResourceStatementSet> GetSqlResourceStatementSets(Assembly assembly, string resource, int batchSize)
         {
-            var stopwatch = Stopwatch.StartNew();
-
-            var statementSets = Enumerable.Empty<ParsedStatementSet>();
+            var statementSets = new List<SqlResourceStatementSet>();
 
             using (var stream = assembly.GetManifestResourceStream(resource))
             {
@@ -122,36 +135,40 @@ namespace Api.Tests.Helpers
 
                 using (var streamReader = new StreamReader(stream))
                 {
-                    var internalStopwatch = Stopwatch.StartNew();
-
                     if (Path.GetExtension(resource).Equals(".zip", StringComparison.CurrentCultureIgnoreCase))
                     {
                         using (var zip = new ZipArchive(streamReader.BaseStream, ZipArchiveMode.Read))
                         {
-                            foreach (var entry in zip.Entries.OrderBy(zae => zae.FullName))
+                            foreach (var entry in zip.Entries)
                             {
                                 using (var zipStream = entry.Open())
-                                using (var zipStreamReader = new StreamReader(zipStream))
                                 {
-                                    statementSets = SqlBatchParser.ParseScriptData(zipStreamReader, batchSize: batchSize);
+                                    using (var zipStreamReader = new StreamReader(zipStream))
+                                    {
+                                        var stopwatch = Stopwatch.StartNew();
+
+                                        statementSets.Add(new SqlResourceStatementSet(entry.FullName, SqlBatchParser.ParseScriptData(zipStreamReader, batchSize: batchSize)));
+
+                                        stopwatch.Stop();
+
+                                        _logger.LogDebug($"{nameof(SqlBatchParser.ParseScriptData)} {resource} {entry.FullName} {stopwatch.Elapsed:g}");
+                                    }
                                 }
                             }
                         }
                     }
                     else
                     {
-                        statementSets = SqlBatchParser.ParseScriptData(streamReader, batchSize: batchSize);
+                        var stopwatch = Stopwatch.StartNew();
+
+                        statementSets.Add(new SqlResourceStatementSet(resource, SqlBatchParser.ParseScriptData(streamReader, batchSize: batchSize)));
+
+                        stopwatch.Stop();
+
+                        _logger.LogDebug($"{nameof(SqlBatchParser.ParseScriptData)} {resource} {stopwatch.Elapsed:g}");
                     }
-
-                    internalStopwatch.Stop();
-
-                    _logger.LogDebug($"ParseScripData {resource} {internalStopwatch.Elapsed:g}");
                 }
             }
-
-            stopwatch.Stop();
-
-            _logger.LogDebug($"Ending {nameof(GetStatementSets)} {stopwatch.Elapsed:g}");
 
             return statementSets;
         }
