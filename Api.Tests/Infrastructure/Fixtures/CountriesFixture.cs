@@ -20,7 +20,11 @@ namespace Api.Tests.Infrastructure.Fixtures
                 // Furthermore, we could have data seeding in ef configurations with the HasData method
             });
 
-            Checkpoint.TablesToIgnore = Constants.TablesToIgnore;
+            Checkpoint.TablesToIgnore = new[] {
+                "__EFMigrationsHistory",
+                "SchemaVersions",
+                "sysdiagrams"
+            };
         }
 
         // ReSharper disable once UnusedMember.Global

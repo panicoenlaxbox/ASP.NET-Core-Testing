@@ -37,7 +37,11 @@ namespace Api.Tests.Infrastructure.Fixtures
                 context.SaveChanges();
             });
 
-            Checkpoint.TablesToIgnore = Constants.TablesToIgnore.Concat(
+            Checkpoint.TablesToIgnore = new[] {
+                "__EFMigrationsHistory",
+                "SchemaVersions",
+                "sysdiagrams"
+            }.Concat(
                 new[] { "Countries" }).ToArray();
         }
 

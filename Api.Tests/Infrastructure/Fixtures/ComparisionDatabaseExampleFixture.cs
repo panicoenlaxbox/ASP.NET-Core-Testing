@@ -28,9 +28,14 @@ namespace Api.Tests.Infrastructure.Fixtures
 
             DropAndCreateDatabase<ShopContext>(ExpectedConnectionString);
 
-            ActualCheckpoint.TablesToIgnore = Constants.TablesToIgnore;
+            var tablesToIgnore = new[] {
+                "__EFMigrationsHistory",
+                "SchemaVersions",
+                "sysdiagrams"
+            };
+            ActualCheckpoint.TablesToIgnore = tablesToIgnore;
 
-            ExpectedCheckpoint.TablesToIgnore = Constants.TablesToIgnore;
+            ExpectedCheckpoint.TablesToIgnore = tablesToIgnore;
         }
 
         protected (string, string) ParseConnectionStrings()
