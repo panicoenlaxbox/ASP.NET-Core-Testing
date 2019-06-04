@@ -13,3 +13,5 @@ http://panicoenlaxbox.blogspot.com/2017/11/crear-e-inicializar-un-contexto-en-ef
 Post de Jimmy Bogard (respawn)
 Strategies for isolating the database in tests
 https://lostechies.com/jimmybogard/2013/06/18/strategies-for-isolating-the-database-in-tests/
+
+_Tasks > Generate Scripts... > Select specific database objects > Advanced > Script USE DATABASE = False, Types of data to script  = Data only_
