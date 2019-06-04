@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -33,28 +34,24 @@ namespace Api.Tests.Helpers
             }
         }
 
-        public async Task ExecuteAsync(string connectionString, Assembly assembly, string resource)
+        public async Task ExecuteAsync(string connectionString, Assembly assembly, string resource, int batchSize = 50)
         {
             _logger.LogDebug($"Starting {nameof(ExecuteAsync)}");
 
             var stopwatch = Stopwatch.StartNew();
 
-            IEnumerable<ParsedStatementSet> statementSets;
-            using (var stream = assembly.GetManifestResourceStream(resource))
-            {
-                if (stream == null)
-                {
-                    throw new ArgumentException($"{resource} not found", nameof(resource));
-                }
+            var statementSets = GetStatementSets(assembly, resource, batchSize);
 
-                using (var streamReader = new StreamReader(stream))
-                {
-                    var internalStopwatch = Stopwatch.StartNew();
-                    statementSets = SqlBatchParser.ParseScriptData(streamReader, batchSize: 50);
-                    internalStopwatch.Stop();
-                    _logger.LogDebug($"ParseScripData {resource} {internalStopwatch.Elapsed:g}");
-                }
-            }
+            await ExecuteStatementSetsAsync(connectionString, statementSets);
+
+            stopwatch.Stop();
+
+            _logger.LogDebug($"Ending {nameof(ExecuteAsync)} {stopwatch.Elapsed:g}");
+        }
+
+        private async Task ExecuteStatementSetsAsync(string connectionString, IEnumerable<ParsedStatementSet> statementSets)
+        {
+            var stopwatch = Stopwatch.StartNew();
 
             foreach (var statementSet in statementSets)
             {
@@ -63,7 +60,8 @@ namespace Api.Tests.Helpers
                     var internalStopwatch = Stopwatch.StartNew();
 
                     const int numberOfTasks = 8;
-                    var tasks = new List<Task>(); ;
+                    var tasks = new List<Task>();
+                    ;
 
                     var currentTaskIndex = 0;
 
@@ -105,7 +103,57 @@ namespace Api.Tests.Helpers
             }
 
             stopwatch.Stop();
-            _logger.LogDebug($"Ending {nameof(ExecuteAsync)} {stopwatch.Elapsed:g}");
+
+            _logger.LogDebug($"Ending {nameof(ExecuteStatementSetsAsync)} {stopwatch.Elapsed:g}");
+        }
+
+        private IEnumerable<ParsedStatementSet> GetStatementSets(Assembly assembly, string resource, int batchSize)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            var statementSets = Enumerable.Empty<ParsedStatementSet>();
+
+            using (var stream = assembly.GetManifestResourceStream(resource))
+            {
+                if (stream == null)
+                {
+                    throw new ArgumentException($"{resource} not found", nameof(resource));
+                }
+
+                using (var streamReader = new StreamReader(stream))
+                {
+                    var internalStopwatch = Stopwatch.StartNew();
+
+                    if (Path.GetExtension(resource).Equals(".zip", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        using (var zip = new ZipArchive(streamReader.BaseStream, ZipArchiveMode.Read))
+                        {
+                            foreach (var entry in zip.Entries.OrderBy(zae => zae.FullName))
+                            {
+                                using (var zipStream = entry.Open())
+                                using (var zipStreamReader = new StreamReader(zipStream))
+                                {
+                                    statementSets = SqlBatchParser.ParseScriptData(zipStreamReader, batchSize: batchSize);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        statementSets = SqlBatchParser.ParseScriptData(streamReader, batchSize: batchSize);
+                    }
+
+                    internalStopwatch.Stop();
+
+                    _logger.LogDebug($"ParseScripData {resource} {internalStopwatch.Elapsed:g}");
+                }
+            }
+
+            stopwatch.Stop();
+
+            _logger.LogDebug($"Ending {nameof(GetStatementSets)} {stopwatch.Elapsed:g}");
+
+            return statementSets;
         }
 
         public async Task ExecuteAsync(string connectionString, Assembly assembly, string type, string methodName, string suffix)
