@@ -49,8 +49,8 @@ Y por otro lado está nuestra aplicación.
 
 ## ASP.NET-Core-Testing
 
-- `Api.Host` es el [host web].
+- `Api.Host` es el host web.
 - `Api.Tests` tendrá su [propio host](https://github.com/panicoenlaxbox/ASP.NET-Core-Testing/blob/master/Api.Tests/Infrastructure/Fixtures/IntegrationFixtureBase.cs) que usará además TestServer como servidor.
-- `Api` es nuestra aplicación, donde configuramos parte de nuestro fichero `Startup`, pero no todo, el resto se hace en cada host, ya que primero carga la parte común y luego cada uno agrega lo específico según host (web o test).
+- `Api` es nuestra aplicación, donde configuramos parte de nuestro fichero `Startup`, pero no todo, el resto se hace en cada host ya que primero carga la parte común y luego cada uno agrega lo específico según host (web o test).
 
 
