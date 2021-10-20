@@ -32,7 +32,7 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
 	Host.CreateDefaultBuilder(args)...
 ```
 
-El host de web ya está deprecado en y sólo se mantiene por retrocompatibilidad:
+El host de web ya está deprecado sólo se mantiene por retrocompatibilidad:
 
 ```csharp
 public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
