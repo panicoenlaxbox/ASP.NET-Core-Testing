@@ -51,6 +51,10 @@ Y por otro lado está nuestra aplicación.
 
 - `Api.Host` es el host web.
 - `Api.Tests` tendrá su [propio host](https://github.com/panicoenlaxbox/ASP.NET-Core-Testing/blob/master/Api.Tests/Infrastructure/Fixtures/IntegrationFixtureBase.cs) que usará además TestServer como servidor.
-- `Api` es nuestra aplicación, donde configuramos parte de nuestro fichero `Startup`, pero no todo, el resto se hace en cada host ya que primero carga la parte común y luego cada uno agrega lo específico según host (web o test).
+- `Api` es nuestra aplicación, que no incluye detalles específicos de cada host, pero sí [detalles comunes](Api/ApiConfiguration.cs) como el formateador de JSON (siempre sucederá con independencia del host). Un ejemplo de detalle específico de host es el host web que incluye CORS.
+
+### Opciones descartadas
+
+Otra opción (aunque no es lo mejor) sería crear en cada host un Startup que heredase de un Startup común y después sobreescribir y/o modificar lo configurado previamente. Este acercamiento es viable con los servicios de DI (eliminado y registrando de nuevo), pero para otras cosas (por ejemplo, middlewares de la pipeline) se hace más díficil y a veces incluso no es viable.
 
 
