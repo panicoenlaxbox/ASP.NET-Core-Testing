@@ -52,7 +52,7 @@ Y por otro lado está nuestra aplicación.
 # ASP.NET-Core-Testing
 
 - `Api.Host` es el host web.
-- `Api.Tests` tendrá su [propio host](https://github.com/panicoenlaxbox/ASP.NET-Core-Testing/blob/master/Api.Tests/Infrastructure/Fixtures/IntegrationFixtureBase.cs) que usará además TestServer como servidor (servidor en memoria).
+- `Api.Tests` tendrá su [propio host](https://github.com/panicoenlaxbox/ASP.NET-Core-Testing/blob/master/Api.Tests/Infrastructure/Fixtures/IntegrationFixtureBase.cs) que usará además TestServer como servidor (servidor en memoria), que además suministra también un cliente http.
 - `Api` es nuestra aplicación, que no incluye detalles específicos de cada host, pero sí [detalles comunes](Api/ApiConfiguration.cs) como el formateador de JSON (siempre sucederá con independencia del host). Un ejemplo de detalle específico de host es el host web que incluye CORS o que base de datos usar que será distinta para el web host y para el test host.
 
 ## Opciones descartadas
